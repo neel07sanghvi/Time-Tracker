@@ -1,23 +1,23 @@
-'use client'
+"use client";
 
-import { useAuth } from '../../hooks/useAuth'
-import { Button } from '@time-tracker/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@time-tracker/ui/card'
-import Link from 'next/link'
+import { useAuth } from "../../hooks/useAuth";
+import { Button } from "@time-tracker/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@time-tracker/ui";
+import Link from "next/link";
 
 export default function DashboardPage() {
-  const { user, loading, logout } = useAuth()
+  const { user, loading, logout } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p>Loading...</p>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return null
+    return null;
   }
 
   return (
@@ -26,7 +26,9 @@ export default function DashboardPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome to Mercor Time Tracker</p>
+            <p className="text-muted-foreground">
+              Welcome to Mercor Time Tracker
+            </p>
           </div>
           <Button variant="outline" onClick={logout}>
             Logout
@@ -88,5 +90,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

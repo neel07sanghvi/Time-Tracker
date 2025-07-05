@@ -1,49 +1,54 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@time-tracker/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@time-tracker/ui/card'
-import { Input } from '@time-tracker/ui/input'
-import { Label } from '@time-tracker/ui/label'
-import { auth } from '@time-tracker/api'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@time-tracker/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@time-tracker/ui";
+import { Input } from "@time-tracker/ui";
+import { Label } from "@time-tracker/ui";
+import { auth } from "@time-tracker/api";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
-      const { data, error: authError } = await auth.signInWithEmail(email, password)
-      
+      const { data, error: authError } = await auth.signInWithEmail(
+        email,
+        password
+      );
+
       if (authError) {
-        setError(authError.message || 'Login failed')
-        setLoading(false)
-        return
+        setError(authError.message || "Login failed");
+        setLoading(false);
+        return;
       }
 
       if (data.user) {
-        router.push('/dashboard')
+        router.push("/dashboard");
       }
     } catch (err) {
-      setError('An unexpected error occurred')
-      setLoading(false)
+      setError("An unexpected error occurred");
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center">Mercor Time Tracker</CardTitle>
-          <p className="text-center text-muted-foreground">Sign in to your admin account</p>
+          <p className="text-center text-muted-foreground">
+            Sign in to your admin account
+          </p>
         </CardHeader>
         <CardContent>
           {error && (
@@ -51,7 +56,7 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-          
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -64,7 +69,7 @@ export default function LoginPage() {
                 placeholder="admin@company.com"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -76,13 +81,13 @@ export default function LoginPage() {
                 placeholder="Enter your password"
               />
             </div>
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,68 +1,75 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@time-tracker/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@time-tracker/ui/card"
-import { Input } from "@time-tracker/ui/input"
-import { Label } from "@time-tracker/ui/label"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@time-tracker/ui/table"
-import { database } from "@time-tracker/api"
-import { Employee } from "@time-tracker/db"
-import Link from "next/link"
-import { useAuth } from "../../hooks/useAuth"
+import { useState, useEffect } from "react";
+import { Button } from "@time-tracker/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@time-tracker/ui";
+import { Input } from "@time-tracker/ui";
+import { Label } from "@time-tracker/ui";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@time-tracker/ui";
+import { database } from "@time-tracker/api";
+import { Employee } from "@time-tracker/db";
+import Link from "next/link";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function EmployeesPage() {
-  const { user, loading: authLoading, logout } = useAuth()
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [loading, setLoading] = useState(true)
-  const [addingEmployee, setAddingEmployee] = useState(false)
-  const [resendingEmail, setResendingEmail] = useState<string | null>(null)
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
-  const [newEmployee, setNewEmployee] = useState({ name: "", email: "" })
+  const { user, loading: authLoading, logout } = useAuth();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [addingEmployee, setAddingEmployee] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [newEmployee, setNewEmployee] = useState({ name: "", email: "" });
 
   useEffect(() => {
-    loadEmployees()
-  }, [])
+    loadEmployees();
+  }, []);
 
   const loadEmployees = async () => {
     try {
-      const { data, error } = await database.getEmployees()
+      const { data, error } = await database.getEmployees();
       if (data) {
-        setEmployees(data)
+        setEmployees(data);
       }
       if (error) {
-        console.error('Error loading employees:', error)
+        console.error("Error loading employees:", error);
       }
     } catch (err) {
-      console.error('Failed to load employees:', err)
+      console.error("Failed to load employees:", err);
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const handleAddEmployee = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setAddingEmployee(true)
+    e.preventDefault();
+    setAddingEmployee(true);
 
-    const activationToken = crypto.randomUUID()
+    const activationToken = crypto.randomUUID();
     const { data, error } = await database.createEmployee({
       ...newEmployee,
-      activation_token: activationToken
-    })
+      activation_token: activationToken,
+    });
 
     if (data) {
       // Send invitation email
-      const activationLink = `${window.location.origin}/activate?token=${activationToken}&email=${encodeURIComponent(newEmployee.email)}`
+      const activationLink = `${window.location.origin}/activate?token=${activationToken}&email=${encodeURIComponent(newEmployee.email)}`;
 
       try {
-        const response = await fetch('/api/send-email', {
-          method: 'POST',
+        const response = await fetch("/api/send-email", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             to: newEmployee.email,
-            subject: 'Welcome to Mercor Time Tracker - Account Activation',
+            subject: "Welcome to Mercor Time Tracker - Account Activation",
             name: newEmployee.name,
             html: `
               <h2>Welcome to Mercor Time Tracker!</h2>
@@ -73,76 +80,83 @@ export default function EmployeesPage() {
               <p>${activationLink}</p>
               <p>This link will expire in 24 hours.</p>
               <p>Best regards,<br>The Mercor Team</p>
-            `
-          })
-        })
+            `,
+          }),
+        });
 
         if (response.ok) {
-          alert('Employee added and invitation email sent successfully!')
+          alert("Employee added and invitation email sent successfully!");
         } else {
-          const errorData = await response.json()
-          console.error('Email error:', errorData)
-          alert(`Employee added but failed to send invitation email: ${errorData.error || 'Unknown error'}`)
+          const errorData = await response.json();
+          console.error("Email error:", errorData);
+          alert(
+            `Employee added but failed to send invitation email: ${errorData.error || "Unknown error"}`
+          );
         }
       } catch (emailError) {
-        console.error('Failed to send email:', emailError)
-        alert('Employee added but failed to send invitation email. Please send the activation link manually.')
+        console.error("Failed to send email:", emailError);
+        alert(
+          "Employee added but failed to send invitation email. Please send the activation link manually."
+        );
       }
 
-      setEmployees([...employees, data[0]])
-      setNewEmployee({ name: "", email: "" })
-      setShowAddForm(false)
+      setEmployees([...employees, data[0]]);
+      setNewEmployee({ name: "", email: "" });
+      setShowAddForm(false);
     }
-    setAddingEmployee(false)
-  }
+    setAddingEmployee(false);
+  };
 
   const handleEditEmployee = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingEmployee) return
+    e.preventDefault();
+    if (!editingEmployee) return;
 
     const { data, error } = await database.updateEmployee(editingEmployee.id, {
       name: editingEmployee.name,
-      email: editingEmployee.email
-    })
+      email: editingEmployee.email,
+    });
 
     if (data) {
-      setEmployees(employees.map(emp =>
-        emp.id === editingEmployee.id ? data[0] : emp
-      ))
-      setEditingEmployee(null)
+      setEmployees(
+        employees.map((emp) => (emp.id === editingEmployee.id ? data[0] : emp))
+      );
+      setEditingEmployee(null);
     }
-  }
+  };
 
   const handleDeleteEmployee = async (id: string) => {
     if (confirm("Are you sure you want to delete this employee?")) {
-      const { error } = await database.deleteEmployee(id)
+      const { error } = await database.deleteEmployee(id);
       if (!error) {
-        setEmployees(employees.filter(emp => emp.id !== id))
+        setEmployees(employees.filter((emp) => emp.id !== id));
       }
     }
-  }
+  };
 
-  const handleResendInvitation = async (e: React.MouseEvent, employee: Employee) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleResendInvitation = async (
+    e: React.MouseEvent,
+    employee: Employee
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
 
     if (!employee.activation_token) {
-      alert("No activation token found for this employee")
-      return
+      alert("No activation token found for this employee");
+      return;
     }
 
-    setResendingEmail(employee.id)
-    const activationLink = `${window.location.origin}/activate?token=${employee.activation_token}&email=${encodeURIComponent(employee.email)}`
+    setResendingEmail(employee.id);
+    const activationLink = `${window.location.origin}/activate?token=${employee.activation_token}&email=${encodeURIComponent(employee.email)}`;
 
     try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
+      const response = await fetch("/api/send-email", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           to: employee.email,
-          subject: 'Reminder: Activate Your Mercor Time Tracker Account',
+          subject: "Reminder: Activate Your Mercor Time Tracker Account",
           name: employee.name,
           html: `
             <h2>Reminder: Activate Your Account</h2>
@@ -152,34 +166,36 @@ export default function EmployeesPage() {
             <p>If the button doesn't work, copy and paste this link into your browser:</p>
             <p>${activationLink}</p>
             <p>Best regards,<br>The Mercor Team</p>
-          `
-        })
-      })
+          `,
+        }),
+      });
 
       if (response.ok) {
-        alert('Invitation email sent successfully!')
+        alert("Invitation email sent successfully!");
       } else {
-        const errorData = await response.json()
-        console.error('Email error:', errorData)
-        alert(`Failed to send invitation email: ${errorData.error || 'Unknown error'}`)
+        const errorData = await response.json();
+        console.error("Email error:", errorData);
+        alert(
+          `Failed to send invitation email: ${errorData.error || "Unknown error"}`
+        );
       }
     } catch (emailError) {
-      console.error('Failed to send email:', emailError)
-      alert('Failed to send invitation email. Please try again.')
+      console.error("Failed to send email:", emailError);
+      alert("Failed to send invitation email. Please try again.");
     }
-    setResendingEmail(null)
-  }
+    setResendingEmail(null);
+  };
 
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p>Loading...</p>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return null
+    return null;
   }
 
   return (
@@ -188,7 +204,9 @@ export default function EmployeesPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Employee Management</h1>
-            <p className="text-muted-foreground">Manage your team members and their access</p>
+            <p className="text-muted-foreground">
+              Manage your team members and their access
+            </p>
           </div>
           <div className="flex gap-2">
             <Link href="/dashboard">
@@ -197,9 +215,7 @@ export default function EmployeesPage() {
             <Button variant="outline" onClick={logout}>
               Logout
             </Button>
-            <Button onClick={() => setShowAddForm(true)}>
-              Add Employee
-            </Button>
+            <Button onClick={() => setShowAddForm(true)}>Add Employee</Button>
           </div>
         </div>
 
@@ -216,7 +232,9 @@ export default function EmployeesPage() {
                     <Input
                       id="name"
                       value={newEmployee.name}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
+                      onChange={(e) =>
+                        setNewEmployee({ ...newEmployee, name: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -226,7 +244,12 @@ export default function EmployeesPage() {
                       id="email"
                       type="email"
                       value={newEmployee.email}
-                      onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                      onChange={(e) =>
+                        setNewEmployee({
+                          ...newEmployee,
+                          email: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -235,7 +258,11 @@ export default function EmployeesPage() {
                   <Button type="submit" disabled={addingEmployee}>
                     {addingEmployee ? "Adding..." : "Add Employee"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAddForm(false)}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -257,7 +284,12 @@ export default function EmployeesPage() {
                     <Input
                       id="edit-name"
                       value={editingEmployee.name}
-                      onChange={(e) => setEditingEmployee({ ...editingEmployee, name: e.target.value })}
+                      onChange={(e) =>
+                        setEditingEmployee({
+                          ...editingEmployee,
+                          name: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -267,14 +299,23 @@ export default function EmployeesPage() {
                       id="edit-email"
                       type="email"
                       value={editingEmployee.email}
-                      onChange={(e) => setEditingEmployee({ ...editingEmployee, email: e.target.value })}
+                      onChange={(e) =>
+                        setEditingEmployee({
+                          ...editingEmployee,
+                          email: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit">Update Employee</Button>
-                  <Button type="button" variant="outline" onClick={() => setEditingEmployee(null)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditingEmployee(null)}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -290,7 +331,9 @@ export default function EmployeesPage() {
           <CardContent>
             {employees.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No employees found. Add your first employee to get started.</p>
+                <p className="text-muted-foreground">
+                  No employees found. Add your first employee to get started.
+                </p>
               </div>
             ) : (
               <Table>
@@ -306,38 +349,51 @@ export default function EmployeesPage() {
                 <TableBody>
                   {employees.map((employee) => (
                     <TableRow key={employee.id}>
-                      <TableCell className="font-medium">{employee.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {employee.name}
+                      </TableCell>
                       <TableCell>{employee.email}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${employee.status === 'active' ? 'bg-green-100 text-green-800' :
-                          employee.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            employee.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : employee.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                          }`}
+                        >
                           {employee.status}
                         </span>
                       </TableCell>
-                      <TableCell>{new Date(employee.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {new Date(employee.created_at).toLocaleDateString()}
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              setEditingEmployee(employee)
-                              setShowAddForm(false)
+                              setEditingEmployee(employee);
+                              setShowAddForm(false);
                             }}
                           >
                             Edit
                           </Button>
-                          {employee.status === 'pending' && (
+                          {employee.status === "pending" && (
                             <Button
                               type="button"
                               variant="secondary"
                               size="sm"
-                              onClick={(e) => handleResendInvitation(e, employee)}
+                              onClick={(e) =>
+                                handleResendInvitation(e, employee)
+                              }
                               disabled={resendingEmail === employee.id}
                             >
-                              {resendingEmail === employee.id ? "Sending..." : "Resend"}
+                              {resendingEmail === employee.id
+                                ? "Sending..."
+                                : "Resend"}
                             </Button>
                           )}
                           <Button
@@ -358,5 +414,5 @@ export default function EmployeesPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
