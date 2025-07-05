@@ -129,6 +129,45 @@ export const database = {
     return { data, error };
   },
 
+  async getEmployeeByActivationToken(token: string) {
+    if (!supabase)
+      return { data: [], error: { message: "Supabase not configured" } };
+    const { data, error } = await supabase
+      .from("employees")
+      .select("*")
+      .eq("activation_token", token)
+      .eq("status", "pending");
+    return { data, error };
+  },
+
+  async activateEmployee(employeeId: string) {
+    if (!supabase)
+      return { data: null, error: { message: "Supabase not configured" } };
+
+    try {
+      // First, get the employee details
+      const { data: employee, error: fetchError } = await supabase
+        .from("employees")
+        .select("*")
+        .eq("id", employeeId)
+        .single();
+
+      if (fetchError || !employee) {
+        return { data: null, error: fetchError || { message: "Employee not found" } };
+      }
+
+      // Update employee status to active and clear activation token
+      const { data, error } = await this.updateEmployee(employeeId, {
+        status: "active",
+        updated_at: new Date().toISOString(),
+      });
+
+      return { data, error };
+    } catch (err) {
+      return { data: null, error: { message: "Failed to activate employee" } };
+    }
+  },
+
   // Projects
   async getProjects() {
     if (!supabase)

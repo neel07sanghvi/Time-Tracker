@@ -88,10 +88,7 @@ export default function ActivatePage() {
         return;
       }
       // Update employee status and clear activation token
-      const { data, error } = await database.activateEmployee(
-        employee.id,
-        password
-      );
+      const { data, error } = await database.activateEmployee(employee.id,);
 
       if (error) {
         setError("Failed to activate account. Please try again.");
@@ -99,7 +96,7 @@ export default function ActivatePage() {
         return;
       }
 
-      alert("Account activated successfully! You can now log in.");
+      alert("Account activated successfully!");
       router.push("/login");
     } catch (err) {
       console.error("Activation failed:", err);
