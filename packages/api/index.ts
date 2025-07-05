@@ -387,4 +387,29 @@ export const database = {
 
     return { data, error };
   },
+
+  async assignTaskToEmployee(taskId: string, employeeId: string) {
+    if (!supabase)
+      return { data: null, error: { message: "Supabase not configured" } };
+
+    // Check if assignment already exists
+    const { data: existing } = await supabase
+      .from("task_assignments")
+      .select("*")
+      .eq("task_id", taskId)
+      .eq("employee_id", employeeId)
+      .single();
+
+    if (existing) {
+      return { data: existing, error: null };
+    }
+
+    // Create new assignment
+    const { data, error } = await supabase
+      .from("task_assignments")
+      .insert([{ task_id: taskId, employee_id: employeeId }])
+      .select();
+
+    return { data, error };
+  }
 };

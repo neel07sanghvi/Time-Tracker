@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@time-tracker/ui";
 import { database } from "@time-tracker/api";
-import { Employee, Task, Project } from "@time-tracker/db"; // Add Employee import
+import { Employee, Task, Project } from "@time-tracker/db";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -26,6 +26,7 @@ export default function TasksPage() {
 
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskAssignments, setTaskAssignments] = useState<{ [taskId: string]: Employee }>({});
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -126,19 +127,6 @@ export default function TasksPage() {
     }
   };
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    const { data, error } = await database.updateTask(id, {
-      status: newStatus,
-    });
-    if (data) {
-      setTasks(
-        tasks.map((task) =>
-          task.id === id ? { ...task, status: newStatus as any } : task
-        )
-      );
-    }
-  };
-
   const handleAssignTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assigningTask || !selectedEmployee) return;
@@ -149,13 +137,6 @@ export default function TasksPage() {
     );
 
     if (!error) {
-      setTasks(
-        tasks.map((task) =>
-          task.id === assigningTask.id
-            ? { ...task, assigned_to: selectedEmployee }
-            : task
-        )
-      );
       setAssigningTask(null);
       setSelectedEmployee("");
       alert("Task assigned successfully!");
@@ -206,65 +187,28 @@ export default function TasksPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAddTask} className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Task Title</Label>
-                    <Input
-                      id="title"
-                      value={newTask.name}
-                      onChange={(e) =>
-                        setNewTask({ ...newTask, name: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="estimated_hours">Estimated Hours</Label>
-                    <Input
-                      id="estimated_hours"
-                      type="number"
-                      step="0.5"
-                      value={newTask.estimated_hours || ""}
-                      onChange={(e) =>
-                        setNewTask({
-                          ...newTask,
-                          estimated_hours: e.target.value
-                            ? parseFloat(e.target.value)
-                            : 0,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="priority">Priority</Label>
-                  <select
-                    id="priority"
-                    value={newTask.priority}
+                  <Label htmlFor="name">Task Name</Label>
+                  <Input
+                    id="name"
+                    value={newTask.name}
                     onChange={(e) =>
-                      setNewTask({
-                        ...newTask,
-                        priority: e.target.value as any,
-                      })
+                      setNewTask({ ...newTask, name: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <textarea
-                    id="description"
-                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
-                    rows={3}
-                    value={newTask.description}
-                    onChange={(e) =>
-                      setNewTask({ ...newTask, description: e.target.value })
-                    }
+                    required
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="is_default"
+                    checked={newTask.is_default}
+                    onChange={(e) =>
+                      setNewTask({ ...newTask, is_default: e.target.checked })
+                    }
+                    className="rounded border-input"
+                  />
+                  <Label htmlFor="is_default">Set as default task</Label>
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit">Add Task</Button>
@@ -288,73 +232,34 @@ export default function TasksPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleEditTask} className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-title">Task Title</Label>
-                    <Input
-                      id="edit-title"
-                      value={editingTask.title}
-                      onChange={(e) =>
-                        setEditingTask({
-                          ...editingTask,
-                          title: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-estimated_hours">
-                      Estimated Hours
-                    </Label>
-                    <Input
-                      id="edit-estimated_hours"
-                      type="number"
-                      step="0.5"
-                      value={editingTask.estimated_hours || ""}
-                      onChange={(e) =>
-                        setEditingTask({
-                          ...editingTask,
-                          estimated_hours: e.target.value
-                            ? parseFloat(e.target.value)
-                            : 0,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-priority">Priority</Label>
-                  <select
-                    id="edit-priority"
-                    value={editingTask.priority}
+                  <Label htmlFor="edit-name">Task Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={editingTask.name}
                     onChange={(e) =>
                       setEditingTask({
                         ...editingTask,
-                        priority: e.target.value as any,
+                        name: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-description">Description</Label>
-                  <textarea
-                    id="edit-description"
-                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
-                    rows={3}
-                    value={editingTask.description || ""}
-                    onChange={(e) =>
-                      setEditingTask({
-                        ...editingTask,
-                        description: e.target.value,
-                      })
-                    }
+                    required
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="edit-is_default"
+                    checked={editingTask.is_default || false}
+                    onChange={(e) =>
+                      setEditingTask({
+                        ...editingTask,
+                        is_default: e.target.checked,
+                      })
+                    }
+                    className="rounded border-input"
+                  />
+                  <Label htmlFor="edit-is_default">Set as default task</Label>
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit">Update Task</Button>
@@ -374,7 +279,7 @@ export default function TasksPage() {
         {assigningTask && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Assign Task: {assigningTask.title}</CardTitle>
+              <CardTitle>Assign Task: {assigningTask.name}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAssignTask} className="space-y-4">
@@ -435,12 +340,8 @@ export default function TasksPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Estimated Hours</TableHead>
-                    <TableHead>Assigned To</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Default Task</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -449,54 +350,16 @@ export default function TasksPage() {
                   {tasks.map((task) => (
                     <TableRow key={task.id}>
                       <TableCell className="font-medium">
-                        {task.title}
+                        {task.name}
                       </TableCell>
                       <TableCell>
-                        <div className="max-w-xs truncate">
-                          {task.description || "No description"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${task.priority === "high"
-                              ? "bg-red-100 text-red-800"
-                              : task.priority === "medium"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-green-100 text-green-800"
-                            }`}
-                        >
-                          {task.priority}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <select
-                          value={task.status}
-                          onChange={(e) =>
-                            handleStatusChange(task.id, e.target.value)
-                          }
-                          className="px-2 py-1 rounded text-xs border"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </TableCell>
-                      <TableCell>
-                        {task.estimated_hours
-                          ? `${task.estimated_hours}h`
-                          : "Not set"}
-                      </TableCell>
-                      <TableCell>
-                        {task.assigned_to ? (
+                        {task.is_default ? (
                           <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                            {availableEmployees.find(
-                              (emp) => emp.id === task.assigned_to
-                            )?.name || "Unknown"}
+                            Default
                           </span>
                         ) : (
                           <span className="text-muted-foreground text-sm">
-                            Unassigned
+                            No
                           </span>
                         )}
                       </TableCell>
@@ -522,7 +385,7 @@ export default function TasksPage() {
                               setAssigningTask(task);
                               setEditingTask(null);
                               setShowAddForm(false);
-                              setSelectedEmployee(task.assigned_to || "");
+                              setSelectedEmployee("");
                             }}
                           >
                             Assign
