@@ -173,7 +173,7 @@ export default function ProjectsPage() {
   };
 
   const assignments = (project: any) => {
-    const assignsments = projectAssignments[project.id];
+    const assignments = projectAssignments[project.id];
     return assignments && assignments.length > 2 && (
       <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
         +{assignments.length - 2} more

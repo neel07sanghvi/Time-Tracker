@@ -411,5 +411,17 @@ export const database = {
       .select();
 
     return { data, error };
+  },
+
+  async getProjectTaskAssignments(projectId: string) {
+    if (!supabase)
+      return { data: [], error: { message: "Supabase not configured" } };
+
+    const { data, error } = await supabase
+      .from("task_assignments")
+      .select("*, employees(*), tasks!inner(*)")
+      .eq("tasks.project_id", projectId);
+
+    return { data, error };
   }
 };

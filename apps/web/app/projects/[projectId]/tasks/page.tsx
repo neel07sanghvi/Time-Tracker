@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@time-tracker/ui";
 import { database } from "@time-tracker/api";
-import { Employee, Task, Project } from "@time-tracker/db";
+import { Employee, Task, Project, TaskAssignment } from "@time-tracker/db";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -43,6 +43,7 @@ export default function TasksPage() {
     loadProject();
     loadTasks();
     loadEmployees();
+    loadTaskAssignments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
@@ -82,6 +83,19 @@ export default function TasksPage() {
           )
         );
       }
+    }
+  };
+
+  const loadTaskAssignments = async () => {
+    const { data, error } = await database.getProjectTaskAssignments(projectId);
+    if (data) {
+      const assignments: { [taskId: string]: Employee } = {};
+      data.forEach((assignment: any) => {
+        if (assignment.employees) {
+          assignments[assignment.task_id] = assignment.employees;
+        }
+      });
+      setTaskAssignments(assignments);
     }
   };
 
@@ -137,6 +151,8 @@ export default function TasksPage() {
     );
 
     if (!error) {
+      // Reload task assignments to update the table
+      await loadTaskAssignments();
       setAssigningTask(null);
       setSelectedEmployee("");
       alert("Task assigned successfully!");
@@ -342,6 +358,7 @@ export default function TasksPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Default Task</TableHead>
+                    <TableHead>Assigned Employee</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -360,6 +377,17 @@ export default function TasksPage() {
                         ) : (
                           <span className="text-muted-foreground text-sm">
                             No
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {taskAssignments[task.id] ? (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                            {taskAssignments[task.id]?.name}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            Not assigned
                           </span>
                         )}
                       </TableCell>
@@ -385,7 +413,8 @@ export default function TasksPage() {
                               setAssigningTask(task);
                               setEditingTask(null);
                               setShowAddForm(false);
-                              setSelectedEmployee("");
+                              // Set the currently assigned employee as default
+                              setSelectedEmployee(taskAssignments[task.id]?.id || "");
                             }}
                           >
                             Assign
