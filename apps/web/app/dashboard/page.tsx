@@ -74,19 +74,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </Link>
-
-          <Link href="/settings">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle>Settings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Configure your time tracking application settings.
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
         </div>
       </div>
     </div>
