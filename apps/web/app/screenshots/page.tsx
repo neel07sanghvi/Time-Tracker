@@ -40,15 +40,13 @@ export default function ScreenshotsPage() {
       const { data, error } = await database.getScreenshots(selectedEmployee);
 
       if (data) {
-        // Apply client-side filtering since API doesn't support project/date filtering
+        // Apply client-side filtering for project and date since the API doesn't support these filters yet
         let filteredData = data;
 
-        // Filter by date if specified
         if (dateFilter) {
-          const filterDate = new Date(dateFilter);
           filteredData = filteredData.filter((screenshot) => {
-            const capturedDate = new Date(screenshot.captured_at);
-            return capturedDate.toDateString() === filterDate.toDateString();
+            const capturedDate = new Date(screenshot.captured_at).toISOString().split('T')[0];
+            return capturedDate === dateFilter;
           });
         }
 
@@ -183,21 +181,31 @@ export default function ScreenshotsPage() {
                         </TableCell>
                         <TableCell>
                           {screenshot.time_entry_id
-                            ? `Entry: ${screenshot.time_entry_id.substring(0, 8)}...`
-                            : "No Time Entry"}
+                            ? "Project Activity"
+                            : "No Project"}
+                        </TableCell>
+                        <TableCell>
+                          {screenshot.time_entry_id
+                            ? "Task Activity"
+                            : "General Activity"}
                         </TableCell>
                         <TableCell>
                           {new Date(screenshot.captured_at).toLocaleString()}
                         </TableCell>
                         <TableCell>
-                          <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${screenshot.has_permission
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                              }`}
-                          >
-                            {screenshot.has_permission ? "Granted" : "Denied"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div
+                                className="h-2 rounded-full bg-blue-500"
+                                style={{
+                                  width: "100%",
+                                }}
+                              />
+                            </div>
+                            <span className="text-sm">
+                              Active
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           {screenshot.file_path ? (
@@ -251,18 +259,18 @@ export default function ScreenshotsPage() {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
+                  {screenshots.filter((s) => s.time_entry_id).length}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  With Time Entry
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">
                   {screenshots.filter((s) => s.has_permission).length}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   With Permission
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {screenshots.filter((s) => !s.has_permission).length}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Without Permission
                 </div>
               </div>
             </div>
