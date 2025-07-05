@@ -1,7 +1,6 @@
 {
-  "name": "web",
+  "name": "@time-tracker/web",
   "version": "0.1.0",
-  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port 3000",
@@ -11,10 +10,23 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/ui": "*",
+    "@time-tracker/ui": "*",
+    "@time-tracker/db": "*",
+    "@time-tracker/validation": "*",
+    "@time-tracker/api": "*",
+    "@supabase/supabase-js": "^2.38.5",
     "next": "^15.3.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "autoprefixer": "^10.4.16",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "lucide-react": "^0.294.0",
+    "nodemailer": "^7.0.4",
+    "@types/nodemailer": "^6.4.17",
+    "postcss": "^8.4.32",
+    "tailwind-merge": "^2.2.0",
+    "tailwindcss": "^3.3.6"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
