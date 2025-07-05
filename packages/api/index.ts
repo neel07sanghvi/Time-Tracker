@@ -310,16 +310,20 @@ export const database = {
   async getScreenshots(employeeId?: string) {
     if (!supabase)
       return { data: [], error: { message: "Supabase not configured" } };
+
+    if (!employeeId) {
+      return { data: [], error: { message: "Employee ID is required" } };
+    }
+
     let query = supabase
       .from("screenshots")
       .select("*, employees(*), time_entries(*)")
       .order("captured_at", { ascending: false });
 
-    if (employeeId) {
-      query = query.eq("employee_id", employeeId);
-    }
+    query = query.eq("employee_id", employeeId);
 
     const { data, error } = await query;
+
     return { data, error };
   },
 

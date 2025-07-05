@@ -32,7 +32,7 @@ export default function LoginPage() {
         return;
       }
 
-      if (data.user) {
+      if (data?.user) {
         router.push("/dashboard");
       }
     } catch (err) {
