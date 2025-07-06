@@ -32,6 +32,7 @@ import {
   XCircle,
   UserCheck,
 } from "lucide-react";
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function EmployeesPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -100,7 +101,7 @@ export default function EmployeesPage() {
         });
 
         if (response.ok) {
-          alert("Employee added and invitation email sent successfully!");
+          toast.success("Employee added and invitation email sent successfully!");
         } else {
           const errorData = await response.json();
           console.error("Email error:", errorData);
@@ -156,7 +157,7 @@ export default function EmployeesPage() {
     e.stopPropagation();
 
     if (!employee.activation_token) {
-      alert("No activation token found for this employee");
+      toast.error("No activation token found for this employee");
       return;
     }
 
@@ -186,7 +187,7 @@ export default function EmployeesPage() {
       });
 
       if (response.ok) {
-        alert("Invitation email sent successfully!");
+        toast.success("Invitation email sent successfully!");
       } else {
         const errorData = await response.json();
         console.error("Email error:", errorData);
@@ -196,7 +197,7 @@ export default function EmployeesPage() {
       }
     } catch (emailError) {
       console.error("Failed to send email:", emailError);
-      alert("Failed to send invitation email. Please try again.");
+      toast.error("Failed to send invitation email. Please try again.");
     }
     setResendingEmail(null);
   };
@@ -232,6 +233,10 @@ export default function EmployeesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">

@@ -37,6 +37,7 @@ import {
   PauseCircle,
   CheckCircle2,
 } from "lucide-react";
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function ProjectsPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -178,9 +179,9 @@ export default function ProjectsPage() {
 
       setAssigningProject(null);
       setSelectedEmployees([]);
-      alert("Employees assigned successfully!");
+      toast.success("Employees assigned successfully!")
     } else {
-      alert("Failed to assign employees. Please try again.");
+      toast.error("Failed to assign employees. Please try again.");
     }
   };
 
@@ -216,22 +217,15 @@ export default function ProjectsPage() {
     return null;
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <PlayCircle className="h-4 w-4 text-green-600" />;
-      case 'completed':
-        return <CheckCircle2 className="h-4 w-4 text-blue-600" />;
-      default:
-        return <PauseCircle className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
   const activeProjects = projects.filter(proj => proj.status === 'active').length;
   const completedProjects = projects.filter(proj => proj.status === 'completed').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">

@@ -8,6 +8,7 @@ import { Input } from "@time-tracker/ui";
 import { Label } from "@time-tracker/ui";
 import { database } from "@time-tracker/api";
 import { Employee } from "@time-tracker/db";
+import toast, { Toaster } from 'react-hot-toast';
 
 export function ActivateForm() {
   const [loading, setLoading] = useState(false);
@@ -97,7 +98,7 @@ export function ActivateForm() {
         return;
       }
 
-      alert("Account activated successfully!");
+      toast.success("Account activated successfully!");
       router.push("/login");
     } catch (err) {
       console.error("Activation failed:", err);

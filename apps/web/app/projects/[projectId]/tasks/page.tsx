@@ -35,6 +35,7 @@ import {
   Star,
   Clock,
 } from "lucide-react";
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function TasksPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -172,9 +173,9 @@ export default function TasksPage() {
       await loadTaskAssignments();
       setAssigningTask(null);
       setSelectedEmployee("");
-      alert("Task assigned successfully!");
+      toast.success("Task assigned successfully!");
     } else {
-      alert("Failed to assign task. Please try again.");
+      toast.error("Failed to assign task. Please try again.");
     }
   };
 
@@ -198,6 +199,10 @@ export default function TasksPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
