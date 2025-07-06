@@ -53,7 +53,7 @@ export default function TasksPage() {
   const [newTask, setNewTask] = useState({
     name: "",
     project_id: projectId,
-    is_default: false,
+    status: "Pending" as "Pending" | "Completed",
   });
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function TasksPage() {
       setNewTask({
         name: "",
         project_id: projectId,
-        is_default: false,
+        status: "Pending",
       });
       setShowAddForm(false);
     }
@@ -140,7 +140,7 @@ export default function TasksPage() {
 
     const { data, error } = await database.updateTask(editingTask.id, {
       name: editingTask.name,
-      is_default: editingTask.is_default,
+      status: editingTask.status,
     });
 
     if (data) {
@@ -193,7 +193,7 @@ export default function TasksPage() {
     return null;
   }
 
-  const defaultTasks = tasks.filter(task => task.is_default).length;
+  const completedTasks = tasks.filter(task => task.status === 'Completed').length;
   const assignedTasks = Object.keys(taskAssignments).length;
 
   return (
@@ -256,11 +256,11 @@ export default function TasksPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Default Tasks</p>
-                  <div className="text-3xl font-bold text-yellow-600">{defaultTasks}</div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Completed Tasks</p>
+                  <div className="text-3xl font-bold text-green-600">{completedTasks}</div>
                 </div>
-                <div className="p-3 bg-yellow-100 rounded-full">
-                  <Star className="h-6 w-6 text-yellow-600" />
+                <div className="p-3 bg-green-100 rounded-full">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
@@ -299,17 +299,19 @@ export default function TasksPage() {
                     required
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="is_default"
-                    checked={newTask.is_default}
+                <div className="space-y-2">
+                  <Label htmlFor="status">Task Status</Label>
+                  <select
+                    id="status"
+                    value={newTask.status}
                     onChange={(e) =>
-                      setNewTask({ ...newTask, is_default: e.target.checked })
+                      setNewTask({ ...newTask, status: e.target.value as "Pending" | "Completed" })
                     }
-                    className="rounded border-input"
-                  />
-                  <Label htmlFor="is_default">Set as default task</Label>
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Completed">Completed</option>
+                  </select>
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit">Add Task</Button>
@@ -347,20 +349,22 @@ export default function TasksPage() {
                     required
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="edit-is_default"
-                    checked={editingTask.is_default || false}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-status">Task Status</Label>
+                  <select
+                    id="edit-status"
+                    value={editingTask.status}
                     onChange={(e) =>
                       setEditingTask({
                         ...editingTask,
-                        is_default: e.target.checked,
+                        status: e.target.value as "Pending" | "Completed",
                       })
                     }
-                    className="rounded border-input"
-                  />
-                  <Label htmlFor="edit-is_default">Set as default task</Label>
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Completed">Completed</option>
+                  </select>
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit">Update Task</Button>
@@ -442,7 +446,7 @@ export default function TasksPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Default Task</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Assigned Employee</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
@@ -455,15 +459,13 @@ export default function TasksPage() {
                         {task.name}
                       </TableCell>
                       <TableCell>
-                        {task.is_default ? (
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                            Default
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            No
-                          </span>
-                        )}
+                        <span className={`px-2 py-1 text-xs rounded ${
+                          task.status === 'Completed' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {task.status}
+                        </span>
                       </TableCell>
                       <TableCell>
                         {taskAssignments[task.id] ? (

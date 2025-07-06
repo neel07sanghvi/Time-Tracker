@@ -53,7 +53,7 @@ export interface Task {
   id: string;
   name: string;
   project_id: string;
-  is_default: boolean;
+  status: "Pending" | "Completed";
   created_at: string;
   updated_at: string;
 }

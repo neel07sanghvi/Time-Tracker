@@ -294,7 +294,7 @@ export const database = {
   async createTask(task: {
     name: string;
     project_id: string;
-    is_default?: boolean;
+    status?: "Pending" | "Completed";
   }) {
     if (!supabase)
       return { data: null, error: { message: "Supabase not configured" } };
@@ -320,6 +320,17 @@ export const database = {
     if (!supabase)
       return { data: null, error: { message: "Supabase not configured" } };
     const { data, error } = await supabase.from("tasks").delete().eq("id", id);
+    return { data, error };
+  },
+
+  async updateTaskStatus(id: string, status: "Pending" | "Completed") {
+    if (!supabase)
+      return { data: null, error: { message: "Supabase not configured" } };
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select();
     return { data, error };
   },
 
@@ -591,7 +602,7 @@ export const database = {
             id,
             name,
             project_id,
-            is_default,
+            status,
             created_at,
             updated_at
           )

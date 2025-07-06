@@ -242,6 +242,22 @@ export default function DashboardPage() {
     setSelectedTask(taskId);
   };
 
+  const handleTaskStatusToggle = async (taskId: string, currentStatus: "Pending" | "Completed") => {
+    try {
+      const newStatus = currentStatus === "Pending" ? "Completed" : "Pending";
+      const { data, error } = await database.updateTaskStatus(taskId, newStatus);
+      
+      if (data && !error) {
+        // Refresh the dashboard data to show the updated status
+        await loadDashboardData();
+      } else {
+        console.error("Error updating task status:", error);
+      }
+    } catch (error) {
+      console.error("Error updating task status:", error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
@@ -533,11 +549,23 @@ export default function DashboardPage() {
                                       <span className="font-medium text-gray-900">{task.name}</span>
                                     </div>
                                     <div className="flex space-x-2">
-                                      {task.is_default && (
-                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                          Default
-                                        </span>
-                                      )}
+                                      <select
+                                        value={task.status}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          const newStatus = e.target.value as "Pending" | "Completed";
+                                          handleTaskStatusToggle(task.id, newStatus === "Completed" ? "Pending" : "Completed");
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className={`text-xs px-2 py-1 rounded border-0 font-medium cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                          task.status === 'Completed'
+                                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                                        }`}
+                                      >
+                                        <option value="Pending" className="bg-white text-gray-900">Pending</option>
+                                        <option value="Completed" className="bg-white text-gray-900">Completed</option>
+                                      </select>
                                       {selectedProject === project.id && selectedTask === task.id && (
                                         <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
                                           Selected
