@@ -140,7 +140,7 @@ export const database = {
     return { data, error };
   },
 
-  async activateEmployee(employeeId: string) {
+  async activateEmployee(employeeId: string, password: string) {
     if (!supabase)
       return { data: null, error: { message: "Supabase not configured" } };
 
@@ -160,6 +160,8 @@ export const database = {
       const { data, error } = await this.updateEmployee(employeeId, {
         status: "active",
         updated_at: new Date().toISOString(),
+        password,
+        activation_token: null
       });
 
       return { data, error };

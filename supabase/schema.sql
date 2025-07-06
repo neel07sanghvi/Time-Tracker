@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS employees (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
+  password TEXT,
   name VARCHAR(255) NOT NULL,
   status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'inactive')),
   activation_token TEXT UNIQUE,

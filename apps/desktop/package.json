@@ -1,0 +1,27 @@
+{
+  "name": "desktop",
+  "version": "1.0.0",
+  "description": "Time Tracker Desktop App",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "dependencies": {
+    "@time-tracker/api": "*",
+    "@time-tracker/db": "*"
+  },
+  "devDependencies": {
+    "electron": "^30.0.2"
+  },
+  "electron": "electron .",
+  "dist": "electron-builder",
+  "main": "main.js",
+  "build": {
+    "appId": "com.example.myapp",
+    "productName": "My Electron App",
+    "directories": {
+      "output": "dist"
+    }
+  }
+}

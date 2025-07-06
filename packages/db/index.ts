@@ -8,7 +8,7 @@ export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUr
 // Database Types
 export interface Employee {
   id: string
-  email: string
+  email: string,
   name: string
   status: 'pending' | 'active' | 'inactive'
   activation_token?: string
