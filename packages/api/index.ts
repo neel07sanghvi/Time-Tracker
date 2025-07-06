@@ -153,7 +153,10 @@ export const database = {
         .single();
 
       if (fetchError || !employee) {
-        return { data: null, error: fetchError || { message: "Employee not found" } };
+        return {
+          data: null,
+          error: fetchError || { message: "Employee not found" },
+        };
       }
 
       // Update employee status to active and clear activation token
@@ -161,7 +164,7 @@ export const database = {
         status: "active",
         updated_at: new Date().toISOString(),
         password,
-        activation_token: null
+        activation_token: null,
       });
 
       return { data, error };
@@ -177,12 +180,12 @@ export const database = {
 
     try {
       const { data, error } = await supabase
-        .from('project_assignments')
-        .select('*, projects(*)')
-        .eq('employee_id', employeeId);
+        .from("project_assignments")
+        .select("*, projects(*)")
+        .eq("employee_id", employeeId);
 
       // We want to return the projects, not the assignments
-      const projects = data?.map(assignment => assignment.projects);
+      const projects = data?.map((assignment) => assignment.projects);
 
       return { data: projects, error };
     } catch (err) {
@@ -195,10 +198,11 @@ export const database = {
       return { data: null, error: { message: "Supabase not configured" } };
 
     try {
-      const { data, error } = await supabase.from('employees')
-        .select('*')
-        .eq('email', email)
-        .eq('password', password)
+      const { data, error } = await supabase
+        .from("employees")
+        .select("*")
+        .eq("email", email)
+        .eq("password", password)
         .single();
 
       return { data, error };
@@ -505,5 +509,158 @@ export const database = {
       .eq("tasks.project_id", projectId);
 
     return { data, error };
-  }
+  },
+
+  // Employee-specific APIs
+  async getEmployeeProjects(employeeId: string) {
+    if (!supabase)
+      return { data: [], error: { message: "Supabase not configured" } };
+
+    const { data, error } = await supabase
+      .from("project_assignments")
+      .select(
+        `
+        project_id,
+        projects (*)
+      `
+      )
+      .eq("employee_id", employeeId);
+
+    return {
+      data: data?.map((item) => item.projects).filter(Boolean),
+      error,
+    };
+  },
+
+  async getEmployeeTasks(employeeId: string) {
+    if (!supabase)
+      return { data: [], error: { message: "Supabase not configured" } };
+
+    const { data, error } = await supabase
+      .from("task_assignments")
+      .select(
+        `
+        task_id,
+        tasks (*)
+      `
+      )
+      .eq("employee_id", employeeId);
+
+    return {
+      data: data?.map((item) => item.tasks).filter(Boolean),
+      error,
+    };
+  },
+
+  // Time tracking APIs
+  async startTimeEntry(employeeId: string, projectId: string, taskId: string) {
+    if (!supabase)
+      return { data: null, error: { message: "Supabase not configured" } };
+
+    // Check if there's already an active time entry
+    const { data: activeEntry } = await supabase
+      .from("time_entries")
+      .select("*")
+      .eq("employee_id", employeeId)
+      .is("ended_at", null)
+      .single();
+
+    if (activeEntry) {
+      return {
+        data: null,
+        error: { message: "Already have an active time entry" },
+      };
+    }
+
+    const { data, error } = await supabase
+      .from("time_entries")
+      .insert({
+        employee_id: employeeId,
+        project_id: projectId,
+        task_id: taskId,
+        started_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async stopTimeEntry(employeeId: string) {
+    if (!supabase)
+      return { data: null, error: { message: "Supabase not configured" } };
+
+    const now = new Date();
+    const { data: activeEntry } = await supabase
+      .from("time_entries")
+      .select("*")
+      .eq("employee_id", employeeId)
+      .is("ended_at", null)
+      .single();
+
+    if (!activeEntry) {
+      return { data: null, error: { message: "No active entry found" } };
+    }
+
+    const startedAt = new Date(activeEntry.started_at);
+    const durationInSeconds = Math.floor(
+      (now.getTime() - startedAt.getTime()) / 1000
+    );
+
+    const { data, error } = await supabase
+      .from("time_entries")
+      .update({
+        ended_at: now.toISOString(),
+        duration: durationInSeconds,
+      })
+      .eq("id", activeEntry.id)
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async getActiveTimeEntry(employeeId: string) {
+    if (!supabase)
+      return { data: null, error: { message: "Supabase not configured" } };
+
+    const { data, error } = await supabase
+      .from("time_entries")
+      .select("*, projects(*), tasks(*)")
+      .eq("employee_id", employeeId)
+      .is("ended_at", null)
+      .single();
+
+    return { data, error };
+  },
+
+  async getTodayTimeEntries(employeeId: string) {
+    if (!supabase)
+      return { data: [], error: { message: "Supabase not configured" } };
+
+    const today = new Date();
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    ).toISOString();
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    ).toISOString();
+
+    const { data, error } = await supabase
+      .from("time_entries")
+      .select("*, projects(*), tasks(*)")
+      .eq("employee_id", employeeId)
+      .gte("started_at", startOfDay)
+      .lte("started_at", endOfDay)
+      .order("started_at", { ascending: false });
+
+    return { data, error };
+  },
 };
