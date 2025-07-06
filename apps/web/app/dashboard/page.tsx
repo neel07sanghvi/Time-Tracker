@@ -117,7 +117,7 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-4 text-white relative overflow-hidden">
             <div className="relative z-10">
               <h2 className="text-3xl font-bold mb-2">Welcome back!</h2>
               <p className="text-blue-100 text-lg">
