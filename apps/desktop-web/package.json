@@ -3,32 +3,39 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3001",
+    "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@time-tracker/ui": "*",
-    "@time-tracker/db": "*",
-    "@time-tracker/validation": "*",
     "@time-tracker/api": "*",
+    "@time-tracker/db": "*",
+    "@time-tracker/ui": "*",
+    "@time-tracker/validation": "*",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "js-cookie": "^3.0.5",
+    "lucide-react": "^0.294.0",
+    "next": "15.3.5",
+    "postcss": "^8.4.32",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.5"
+    "tailwind-merge": "^2.2.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
-    "typescript": "^5",
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5"
   }
 }

@@ -170,6 +170,43 @@ export const database = {
     }
   },
 
+  async getProjectsByEmployee(employeeId: string) {
+    if (!supabase) {
+      return { data: [], error: { message: "Supabase not configured" } };
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('project_assignments')
+        .select('*, projects(*)')
+        .eq('employee_id', employeeId);
+
+      // We want to return the projects, not the assignments
+      const projects = data?.map(assignment => assignment.projects);
+
+      return { data: projects, error };
+    } catch (err) {
+      return { data: [], error: { message: "Failed to fetch projects" } };
+    }
+  },
+
+  async signInWithEmployee(email: string, password: string) {
+    if (!supabase)
+      return { data: null, error: { message: "Supabase not configured" } };
+
+    try {
+      const { data, error } = await supabase.from('employees')
+        .select('*')
+        .eq('email', email)
+        .eq('password', password)
+        .single();
+
+      return { data, error };
+    } catch (err) {
+      return { data: null, error: { message: "Failed to sign in" } };
+    }
+  },
+
   // Projects
   async getProjects() {
     if (!supabase)
