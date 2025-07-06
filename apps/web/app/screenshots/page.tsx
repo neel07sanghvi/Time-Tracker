@@ -502,7 +502,7 @@ export default function MonitoringPage() {
                               <img
                                 src={entry.file_path}
                                 alt="Screenshot"
-                                className="w-12 h-9 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                                className="w-16 h-10 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() => window.open(entry.file_path, "_blank")}
                               />
                               <Button
