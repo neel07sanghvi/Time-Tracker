@@ -264,9 +264,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="flex-1 min-w-[65%] mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-hidden flex flex-col">
+      {/* Main Content Container - Now matches header width */}
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-hidden flex flex-col w-full">
         {/* First Row: Today's Summary and Active Timer */}
-        <div className="flex gap-6 mb-6 h-82">
+        <div className="flex gap-6 mb-6 h-80">
           {/* Today's Summary */}
           <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
             <CardHeader className="pb-3 flex-shrink-0">
@@ -303,76 +304,84 @@ export default function DashboardPage() {
                 <span>Active Timer</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0 flex-1 flex flex-col justify-center">
+            <CardContent className="pt-0 flex-1 flex flex-col justify-center min-h-[200px]">
               {activeTimeEntry ? (
-                <div className="text-center">
+                <div className="text-center flex flex-col justify-center h-full">
                   <div className="text-3xl font-mono font-bold text-indigo-600 mb-3 p-4 bg-indigo-50 rounded-lg">
                     {formatDuration(timer)}
                   </div>
                   <div className="text-sm text-gray-600 mb-4">
                     Started at {format(new Date(activeTimeEntry.started_at), "HH:mm")}
                   </div>
-                  <Button
-                    onClick={handleStopTimer}
-                    className="bg-red-600 hover:bg-red-700 text-white shadow-lg px-4 py-2"
-                  >
-                    <Square className="h-4 w-4 mr-2" />
-                    Stop Timer
-                  </Button>
+                  <div className="h-[120px] flex items-center justify-center">
+                    <Button
+                      onClick={handleStopTimer}
+                      className="bg-red-600 hover:bg-red-700 text-white shadow-lg px-4 py-2"
+                    >
+                      <Square className="h-4 w-4 mr-2" />
+                      Stop Timer
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <div className="text-center">
+                <div className="text-center flex flex-col justify-center h-full">
                   <div className="text-3xl font-mono font-bold text-gray-400 mb-3 p-4 bg-gray-50 rounded-lg">
                     00:00:00
                   </div>
                   <div className="text-sm text-gray-600 mb-4">No active timer</div>
-                  {projectsWithTasks.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-1 gap-2">
-                        <select
-                          value={selectedProject}
-                          onChange={(e) => {
-                            setSelectedProject(e.target.value);
-                            // Clear the task selection when project changes
-                            setSelectedTask("");
-                          }}
-                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
+                  <div className="h-[120px] flex items-center justify-center">
+                    {projectsWithTasks.length > 0 ? (
+                      <div className="space-y-3 w-full max-w-sm">
+                        <div className="grid grid-cols-1 gap-2">
+                          <select
+                            value={selectedProject}
+                            onChange={(e) => {
+                              setSelectedProject(e.target.value);
+                              // Clear the task selection when project changes
+                              setSelectedTask("");
+                            }}
+                            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
+                          >
+                            <option value="">Select Project</option>
+                            {projectsWithTasks.map((project) => (
+                              <option key={project.id} value={project.id}>
+                                {project.name}
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={selectedTask}
+                            onChange={(e) => setSelectedTask(e.target.value)}
+                            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
+                            disabled={!selectedProject}
+                          >
+                            <option value="">Select Task</option>
+                            {selectedProject && 
+                              projectsWithTasks
+                                .find(p => p.id === selectedProject)?.tasks
+                                ?.map((task) => (
+                                  <option key={task.id} value={task.id}>
+                                    {task.name}
+                                  </option>
+                                ))
+                            }
+                          </select>
+                        </div>
+                        <Button
+                          onClick={handleStartTimer}
+                          disabled={!selectedProject || !selectedTask}
+                          className="bg-green-600 hover:bg-green-700 text-white shadow-lg w-full px-4 py-2"
                         >
-                          <option value="">Select Project</option>
-                          {projectsWithTasks.map((project) => (
-                            <option key={project.id} value={project.id}>
-                              {project.name}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={selectedTask}
-                          onChange={(e) => setSelectedTask(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
-                          disabled={!selectedProject}
-                        >
-                          <option value="">Select Task</option>
-                          {selectedProject && 
-                            projectsWithTasks
-                              .find(p => p.id === selectedProject)?.tasks
-                              ?.map((task) => (
-                                <option key={task.id} value={task.id}>
-                                  {task.name}
-                                </option>
-                              ))
-                          }
-                        </select>
+                          <Play className="h-4 w-4 mr-2" />
+                          Start Timer
+                        </Button>
                       </div>
-                      <Button
-                        onClick={handleStartTimer}
-                        disabled={!selectedProject || !selectedTask}
-                        className="bg-green-600 hover:bg-green-700 text-white shadow-lg w-full px-4 py-2"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Start Timer
-                      </Button>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="text-center">
+                        <p className="text-gray-500 text-sm">No projects available</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>
