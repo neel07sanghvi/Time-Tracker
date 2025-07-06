@@ -264,7 +264,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="flex-1 min-w-[70%] mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-hidden flex flex-col">
+      <div className="flex-1 min-w-[65%] mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-hidden flex flex-col">
         {/* First Row: Today's Summary, Active Timer, Today's Time Entries */}
         <div className="flex gap-6 mb-6 h-82">
           {/* Today's Summary */}
