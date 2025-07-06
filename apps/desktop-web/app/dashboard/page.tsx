@@ -265,7 +265,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="flex-1 min-w-[65%] mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-hidden flex flex-col">
-        {/* First Row: Today's Summary, Active Timer, Today's Time Entries */}
+        {/* First Row: Today's Summary and Active Timer */}
         <div className="flex gap-6 mb-6 h-82">
           {/* Today's Summary */}
           <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
@@ -333,10 +333,8 @@ export default function DashboardPage() {
                           value={selectedProject}
                           onChange={(e) => {
                             setSelectedProject(e.target.value);
-                            const project = projectsWithTasks.find(p => p.id === e.target.value);
-                            if (project && project.tasks && project.tasks.length > 0 && project.tasks[0]) {
-                              setSelectedTask(project.tasks[0].id);
-                            }
+                            // Clear the task selection when project changes
+                            setSelectedTask("");
                           }}
                           className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
                         >
@@ -379,7 +377,10 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
+        </div>
 
+        {/* Second Row: Today's Time Entries and My Projects & Tasks */}
+        <div className="flex gap-6 flex-1 min-h-0">
           {/* Today's Time Entries */}
           <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
             <CardHeader className="pb-3 flex-shrink-0">
@@ -390,7 +391,13 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="pt-0 flex-1 flex flex-col min-h-0">
               {todayEntries.length > 0 ? (
-                <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                <div 
+                  className="flex-1 overflow-y-scroll space-y-3 pr-2" 
+                  style={{
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: '#d1d5db #f3f4f6'
+                  }}
+                >
                   {todayEntries.map((entry) => (
                     <div
                       key={entry.id}
@@ -398,7 +405,7 @@ export default function DashboardPage() {
                     >
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900 text-sm">
-                          {entry.project?.name} - {entry.task?.name}
+                          {entry.projects?.name} - {entry.tasks?.name}
                         </p>
                         <p className="text-sm text-gray-600">
                           {format(new Date(entry.started_at), "HH:mm")} -
@@ -430,13 +437,11 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
-        </div>
 
-        {/* Second Row: My Projects & Tasks */}
-        <div className="flex-1 min-h-0">
-          <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col">
+          {/* My Projects & Tasks */}
+          <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
             <CardHeader className="pb-4 flex-shrink-0">
-              <CardTitle className="flex items-center space-x-2 text-indigo-900 text-xl">
+              <CardTitle className="flex items-center space-x-2 text-indigo-900 text-lg">
                 <FolderOpen className="h-5 w-5" />
                 <span>My Projects & Tasks</span>
               </CardTitle>
@@ -533,7 +538,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-
       </div>
     </div>
   );

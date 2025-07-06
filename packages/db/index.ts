@@ -76,9 +76,9 @@ export interface TimeEntry {
   id: string;
   employee_id: string;
   project_id: string;
-  project: Project;
+  projects: Project;
   task_id: string;
-  task: Task;
+  tasks: Task;
   started_at: string;
   ended_at?: string;
   duration?: number;

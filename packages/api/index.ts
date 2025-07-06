@@ -621,85 +621,108 @@ export const database = {
     if (!supabase)
       return { data: null, error: { message: "Supabase not configured" } };
 
-    // Check if there's already an active time entry
-    // const { data: activeEntry } = await supabase
-    //   .from("time_entries")
-    //   .select("*")
-    //   .eq("employee_id", employeeId)
-    //   .is("ended_at", null)
-    //   .single();
+    try {
+      console.log("Starting time entry for:", { employeeId, projectId, taskId });
 
-    // if (activeEntry) {
-    //   return {
-    //     data: null,
-    //     error: { message: "Already have an active time entry" },
-    //   };
-    // }
+      // Check if there's already an active time entry
+      const { data: activeEntry } = await supabase
+        .from("time_entries")
+        .select("*")
+        .eq("employee_id", employeeId)
+        .is("ended_at", null)
+        .single();
 
-    // const { data, error } = await supabase
-    //   .from("time_entries")
-    //   .insert({
-    //     employee_id: employeeId,
-    //     project_id: projectId,
-    //     task_id: taskId,
-    //     started_at: new Date().toISOString(),
-    //   })
-    //   .select()
-    //   .single();
+      if (activeEntry) {
+        console.log("Found existing active entry:", activeEntry);
+        return {
+          data: null,
+          error: { message: "Already have an active time entry" },
+        };
+      }
 
-    // return { data, error };
+      // Create new time entry
+      const { data, error } = await supabase
+        .from("time_entries")
+        .insert({
+          employee_id: employeeId,
+          project_id: projectId,
+          task_id: taskId,
+          started_at: new Date().toISOString(),
+        })
+        .select("*, projects(*), tasks(*)")
+        .single();
 
-    return {}
+      console.log("Created time entry:", { data, error });
+      return { data, error };
+    } catch (err) {
+      console.error("Exception in startTimeEntry:", err);
+      return { data: null, error: { message: "Failed to start time entry" } };
+    }
   },
 
   async stopTimeEntry(employeeId: string) {
     if (!supabase)
       return { data: null, error: { message: "Supabase not configured" } };
 
-    // const now = new Date();
-    // const { data: activeEntry } = await supabase
-    //   .from("time_entries")
-    //   .select("*")
-    //   .eq("employee_id", employeeId)
-    //   .is("ended_at", null)
-    //   .single();
+    try {
+      console.log("Stopping time entry for employee:", employeeId);
 
-    // if (!activeEntry) {
-    //   return { data: null, error: { message: "No active entry found" } };
-    // }
+      const now = new Date();
+      const { data: activeEntry } = await supabase
+        .from("time_entries")
+        .select("*")
+        .eq("employee_id", employeeId)
+        .is("ended_at", null)
+        .single();
 
-    // const startedAt = new Date(activeEntry.started_at);
-    // const durationInSeconds = Math.floor(
-    //   (now.getTime() - startedAt.getTime()) / 1000
-    // );
+      if (!activeEntry) {
+        console.log("No active entry found for employee:", employeeId);
+        return { data: null, error: { message: "No active entry found" } };
+      }
 
-    // const { data, error } = await supabase
-    //   .from("time_entries")
-    //   .update({
-    //     ended_at: now.toISOString(),
-    //     duration: durationInSeconds,
-    //   })
-    //   .eq("id", activeEntry.id)
-    //   .select()
-    //   .single();
+      const startedAt = new Date(activeEntry.started_at);
+      const durationInSeconds = Math.floor(
+        (now.getTime() - startedAt.getTime()) / 1000
+      );
 
-    // return { data, error };
+      console.log("Updating time entry with duration:", durationInSeconds);
 
-    return {}
+      const { data, error } = await supabase
+        .from("time_entries")
+        .update({
+          ended_at: now.toISOString(),
+          duration: durationInSeconds,
+        })
+        .eq("id", activeEntry.id)
+        .select("*, projects(*), tasks(*)")
+        .single();
+
+      console.log("Updated time entry:", { data, error });
+      return { data, error };
+    } catch (err) {
+      console.error("Exception in stopTimeEntry:", err);
+      return { data: null, error: { message: "Failed to stop time entry" } };
+    }
   },
 
   async getActiveTimeEntry(employeeId: string) {
     if (!supabase)
       return { data: null, error: { message: "Supabase not configured" } };
 
-    const { data, error } = await supabase
-      .from("time_entries")
-      .select("*, projects(*), tasks(*)")
-      .eq("employee_id", employeeId)
-      .is("ended_at", null)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("time_entries")
+        .select("*, projects(*), tasks(*)")
+        .eq("employee_id", employeeId)
+        .is("ended_at", null)
+        .maybeSingle();
 
-    return { data, error };
+      // maybeSingle() returns null when no records found instead of error
+      return { data, error };
+    } catch (err) {
+      console.error("Exception in getActiveTimeEntry:", err);
+      return { data: null, error: { message: "Failed to get active time entry" } };
+    }
   },
 
   async getTodayTimeEntries(employeeId: string) {
