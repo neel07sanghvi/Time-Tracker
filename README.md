@@ -1,17 +1,3 @@
-Conversation opened. 1 unread message.
-
-Skip to content
-Using Gmail with screen readers
-1 of 975
-(no subject)
-Inbox
-Archit Sanghvi announced a comprehensive employee time tracking system with screenshot monitoring, built with modern web technologies and a desktop application.
-By Gemini; there may be mistakes. Learn more
-
-Archit Sanghvi
-3:19 AM (4 minutes ago)
-to me
-
 # Time Tracker Application
 
 A comprehensive employee time tracking system with screenshot monitoring, built with modern web technologies and a desktop application for seamless employee experience.
