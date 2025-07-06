@@ -266,22 +266,22 @@ export default function DashboardPage() {
 
       <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-hidden flex flex-col">
         {/* First Row: Today's Summary, Active Timer, Today's Time Entries */}
-        <div className="flex gap-6 mb-8 h-80">
+        <div className="flex gap-6 mb-6 h-82">
           {/* Today's Summary */}
           <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
             <CardHeader className="pb-3 flex-shrink-0">
               <CardTitle className="flex items-center space-x-2 text-indigo-900 text-lg">
-                <BarChart3 className="h-4 w-4" />
+                <BarChart3 className="h-5 w-5" />
                 <span>Today's Summary</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0 flex-1 flex flex-col justify-center">
               <div className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-4 p-4 bg-green-50 rounded-lg">
+                <div className="text-3xl font-bold text-green-600 mb-4 p-4 bg-green-50 rounded-lg">
                   {formatDuration(calculateTodayTotal())}
                 </div>
-                <p className="text-base text-gray-600 mb-4">Total hours today</p>
-                <div className="grid grid-cols-2 gap-3 text-base">
+                <p className="text-sm text-gray-600 mb-4">Total hours today</p>
+                <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="bg-indigo-50 p-3 rounded-lg">
                     <div className="text-xl font-semibold text-indigo-900">{todayEntries.length}</div>
                     <div className="text-indigo-600 text-sm">Entries</div>
@@ -299,36 +299,36 @@ export default function DashboardPage() {
           <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
             <CardHeader className="pb-3 flex-shrink-0">
               <CardTitle className="flex items-center space-x-2 text-indigo-900 text-lg">
-                <Clock className="h-4 w-4" />
+                <Clock className="h-5 w-5" />
                 <span>Active Timer</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0 flex-1 flex flex-col justify-center">
               {activeTimeEntry ? (
                 <div className="text-center">
-                  <div className="text-2xl font-mono font-bold text-indigo-600 mb-2 p-3 bg-indigo-50 rounded-lg">
+                  <div className="text-3xl font-mono font-bold text-indigo-600 mb-3 p-4 bg-indigo-50 rounded-lg">
                     {formatDuration(timer)}
                   </div>
-                  <div className="text-xs text-gray-600 mb-2">
+                  <div className="text-sm text-gray-600 mb-4">
                     Started at {format(new Date(activeTimeEntry.started_at), "HH:mm")}
                   </div>
                   <Button
                     onClick={handleStopTimer}
-                    className="bg-red-600 hover:bg-red-700 text-white shadow-lg px-3 py-1 text-sm"
+                    className="bg-red-600 hover:bg-red-700 text-white shadow-lg px-4 py-2"
                   >
-                    <Square className="h-3 w-3 mr-1" />
+                    <Square className="h-4 w-4 mr-2" />
                     Stop Timer
                   </Button>
                 </div>
               ) : (
                 <div className="text-center">
-                  <div className="text-2xl font-mono font-bold text-gray-400 mb-2 p-3 bg-gray-50 rounded-lg">
+                  <div className="text-3xl font-mono font-bold text-gray-400 mb-3 p-4 bg-gray-50 rounded-lg">
                     00:00:00
                   </div>
-                  <div className="text-xs text-gray-600 mb-2">No active timer</div>
+                  <div className="text-sm text-gray-600 mb-4">No active timer</div>
                   {projectsWithTasks.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-1 gap-1">
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 gap-2">
                         <select
                           value={selectedProject}
                           onChange={(e) => {
@@ -338,7 +338,7 @@ export default function DashboardPage() {
                               setSelectedTask(project.tasks[0].id);
                             }
                           }}
-                          className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-xs"
+                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
                         >
                           <option value="">Select Project</option>
                           {projectsWithTasks.map((project) => (
@@ -350,7 +350,7 @@ export default function DashboardPage() {
                         <select
                           value={selectedTask}
                           onChange={(e) => setSelectedTask(e.target.value)}
-                          className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-xs"
+                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
                           disabled={!selectedProject}
                         >
                           <option value="">Select Task</option>
@@ -368,9 +368,9 @@ export default function DashboardPage() {
                       <Button
                         onClick={handleStartTimer}
                         disabled={!selectedProject || !selectedTask}
-                        className="bg-green-600 hover:bg-green-700 text-white shadow-lg w-full px-3 py-1 text-sm"
+                        className="bg-green-600 hover:bg-green-700 text-white shadow-lg w-full px-4 py-2"
                       >
-                        <Play className="h-3 w-3 mr-1" />
+                        <Play className="h-4 w-4 mr-2" />
                         Start Timer
                       </Button>
                     </div>
@@ -384,35 +384,35 @@ export default function DashboardPage() {
           <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
             <CardHeader className="pb-3 flex-shrink-0">
               <CardTitle className="flex items-center space-x-2 text-indigo-900 text-lg">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="h-5 w-5" />
                 <span>Today's Time Entries</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0 flex-1 flex flex-col min-h-0">
               {todayEntries.length > 0 ? (
-                <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                <div className="flex-1 overflow-y-auto space-y-3 pr-2">
                   {todayEntries.map((entry) => (
                     <div
                       key={entry.id}
-                      className="flex justify-between items-center p-2 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100 hover:shadow-md transition-shadow"
+                      className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100 hover:shadow-md transition-shadow"
                     >
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900 text-xs">
+                        <p className="font-semibold text-gray-900 text-sm">
                           {entry.project?.name} - {entry.task?.name}
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-sm text-gray-600">
                           {format(new Date(entry.started_at), "HH:mm")} -
                           {entry.ended_at
                             ? format(new Date(entry.ended_at), " HH:mm")
                             : " Active"}
                         </p>
                       </div>
-                      <div className="text-right flex-shrink-0 ml-2">
-                        <p className="font-mono font-semibold text-indigo-600 text-xs">
+                      <div className="text-right flex-shrink-0 ml-3">
+                        <p className="font-mono font-semibold text-indigo-600 text-sm">
                           {entry.duration ? formatDuration(entry.duration) : "00:00:00"}
                         </p>
                         {!entry.ended_at && (
-                          <span className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded">
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded mt-1 inline-block">
                             Active
                           </span>
                         )}
@@ -423,8 +423,8 @@ export default function DashboardPage() {
               ) : (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
-                    <Calendar className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500 text-xs">No time entries for today</p>
+                    <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 text-sm">No time entries for today</p>
                   </div>
                 </div>
               )}
@@ -433,7 +433,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Second Row: My Projects & Tasks */}
-        <div className="h-96">
+        <div className="flex-1 min-h-0">
           <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col">
             <CardHeader className="pb-4 flex-shrink-0">
               <CardTitle className="flex items-center space-x-2 text-indigo-900 text-xl">
