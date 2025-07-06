@@ -14,22 +14,31 @@ import {
   Calendar,
   Target,
   CheckCircle,
+  ChevronRight,
+  ChevronDown,
+  FolderOpen,
+  FileText,
+  LogOut,
+  Timer,
+  BarChart3,
 } from "lucide-react";
 import { format } from "date-fns";
+
+interface ProjectWithTasks extends Project {
+  tasks: Task[];
+}
 
 export default function DashboardPage() {
   const router = useRouter();
   const [employee, setEmployee] = useState<Employee | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [activeTimeEntry, setActiveTimeEntry] = useState<TimeEntry | null>(
-    null
-  );
+  const [projectsWithTasks, setProjectsWithTasks] = useState<ProjectWithTasks[]>([]);
+  const [activeTimeEntry, setActiveTimeEntry] = useState<TimeEntry | null>(null);
   const [todayEntries, setTodayEntries] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [timer, setTimer] = useState<number>(0);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedTask, setSelectedTask] = useState<string>("");
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     checkAuth();
@@ -74,71 +83,43 @@ export default function DashboardPage() {
     try {
       console.log("Loading dashboard data for employee:", employee.id);
 
-      // First, test if database object is properly imported
-      console.log("Database object:", database);
-      console.log("Available database methods:", Object.keys(database));
-
-      // Test basic connection with getProjects first
-      console.log("Testing getProjects first...");
-      const { data: testData, error: testError } = await database.getProjects();
-      console.log("getProjects test result:", { testData, testError, hasData: !!testData, dataLength: testData?.length });
-
       // Load employee's projects
-      console.log("Now testing getEmployeeProjects with employee ID:", employee.id);
-      const { data: projectsData, error: projectsError } = await database.getEmployeeProjects(
-        employee.id
-      );
-      
-      console.log("Projects response:", { 
-        projectsData, 
-        projectsError,
-        dataType: typeof projectsData,
-        isArray: Array.isArray(projectsData),
-        dataLength: projectsData?.length 
-      });
-
-      if (projectsData && Array.isArray(projectsData) && projectsData.length > 0) {
-        const validProjects: Project[] = [];
-        for (const p of projectsData) {
-          if (p && typeof p === 'object' && 'id' in p && 'name' in p) {
-            validProjects.push(p as unknown as Project);
-          }
-        }
-        setProjects(validProjects);
-        if (validProjects.length > 0 && validProjects[0]) {
-          setSelectedProject(validProjects[0].id);
-        }
-      } else {
-        console.log("No projects found for employee");
-        setProjects([]);
-      }
+      const { data: projectsData, error: projectsError } = await database.getEmployeeProjects(employee.id);
+      console.log("Projects response:", { projectsData, projectsError });
 
       // Load employee's tasks
       const { data: tasksData, error: tasksError } = await database.getEmployeeTasks(employee.id);
-      
       console.log("Tasks response:", { tasksData, tasksError });
 
-      if (tasksData && Array.isArray(tasksData) && tasksData.length > 0) {
-        const validTasks: Task[] = [];
-        for (const t of tasksData) {
-          if (t && typeof t === 'object' && 'id' in t && 'name' in t) {
-            validTasks.push(t as unknown as Task);
+      // Combine projects with their tasks
+      if (projectsData && Array.isArray(projectsData) && tasksData && Array.isArray(tasksData)) {
+        const projectsWithTasksData: ProjectWithTasks[] = projectsData.map((project: any) => {
+          const projectTasks = tasksData.filter((task: any) => task.project_id === project.id) as any[];
+          return {
+            ...project,
+            tasks: projectTasks as unknown as Task[]
+          } as ProjectWithTasks;
+        });
+
+        setProjectsWithTasks(projectsWithTasksData);
+
+        // Set default selections
+        if (projectsWithTasksData.length > 0) {
+          const firstProject = projectsWithTasksData[0];
+          if (firstProject) {
+            setSelectedProject(firstProject.id);
+            if (firstProject.tasks && firstProject.tasks.length > 0 && firstProject.tasks[0]) {
+              setSelectedTask(firstProject.tasks[0].id);
+            }
           }
         }
-        setTasks(validTasks);
-        if (validTasks.length > 0 && validTasks[0]) {
-          setSelectedTask(validTasks[0].id);
-        }
       } else {
-        console.log("No tasks found for employee");
-        setTasks([]);
+        console.log("No projects or tasks found for employee");
+        setProjectsWithTasks([]);
       }
 
       // Load active time entry
-      const { data: activeEntry, error: activeError } = await database.getActiveTimeEntry(
-        employee.id
-      );
-      
+      const { data: activeEntry, error: activeError } = await database.getActiveTimeEntry(employee.id);
       console.log("Active entry response:", { activeEntry, activeError });
 
       if (activeEntry) {
@@ -152,10 +133,7 @@ export default function DashboardPage() {
       }
 
       // Load today's entries
-      const { data: todayData, error: todayError } = await database.getTodayTimeEntries(
-        employee.id
-      );
-      
+      const { data: todayData, error: todayError } = await database.getTodayTimeEntries(employee.id);
       console.log("Today entries response:", { todayData, todayError });
 
       if (todayData) {
@@ -229,11 +207,26 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
+  const toggleProjectExpansion = (projectId: string) => {
+    const newExpanded = new Set(expandedProjects);
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId);
+    } else {
+      newExpanded.add(projectId);
+    }
+    setExpandedProjects(newExpanded);
+  };
+
+  const handleProjectTaskSelection = (projectId: string, taskId: string) => {
+    setSelectedProject(projectId);
+    setSelectedTask(taskId);
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -241,237 +234,306 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-white/20 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-3">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900">Time Tracker</h1>
+              <div className="flex items-center space-x-2">
+                <Timer className="h-6 w-6 text-indigo-600" />
+                <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
+                  Time Tracker
+                </h1>
+              </div>
               {employee && (
                 <span className="text-sm text-gray-600">
                   Welcome, {employee.name}
                 </span>
               )}
             </div>
-            <Button variant="outline" onClick={handleLogout}>
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
               Logout
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Active Timer Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Clock className="h-5 w-5" />
-              <span>Active Timer</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {activeTimeEntry ? (
-              <div className="text-center">
-                <div className="text-4xl font-mono font-bold text-blue-600 mb-4">
-                  {formatDuration(timer)}
-                </div>
-                <div className="text-sm text-gray-600 mb-4">
-                  Started at{" "}
-                  {format(new Date(activeTimeEntry.started_at), "HH:mm")}
-                </div>
-                <Button
-                  onClick={handleStopTimer}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  <Square className="h-4 w-4 mr-2" />
-                  Stop Timer
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center">
-                <div className="text-4xl font-mono font-bold text-gray-400 mb-4">
-                  00:00:00
-                </div>
-                <div className="text-sm text-gray-600 mb-4">
-                  No active timer
-                </div>
-                <div className="space-y-4">
-                  <div className="flex space-x-4 justify-center">
-                    <select
-                      value={selectedProject}
-                      onChange={(e) => setSelectedProject(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {projects.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.name}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={selectedTask}
-                      onChange={(e) => setSelectedTask(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {tasks.map((task) => (
-                        <option key={task.id} value={task.id}>
-                          {task.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <Button
-                    onClick={handleStartTimer}
-                    disabled={!selectedProject || !selectedTask}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Start Timer
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-hidden flex flex-col">
+        {/* First Row: Today's Summary, Active Timer, Today's Time Entries */}
+        <div className="flex gap-6 mb-8 h-80">
           {/* Today's Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5" />
+          <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
+            <CardHeader className="pb-3 flex-shrink-0">
+              <CardTitle className="flex items-center space-x-2 text-indigo-900 text-lg">
+                <BarChart3 className="h-4 w-4" />
                 <span>Today's Summary</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0 flex-1 flex flex-col justify-center">
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 mb-2">
+                <div className="text-4xl font-bold text-green-600 mb-4 p-4 bg-green-50 rounded-lg">
                   {formatDuration(calculateTodayTotal())}
                 </div>
-                <p className="text-sm text-gray-600">Total hours today</p>
-                <div className="mt-4 text-left">
-                  <p className="text-sm text-gray-600">
-                    Entries: {todayEntries.length}
-                  </p>
+                <p className="text-base text-gray-600 mb-4">Total hours today</p>
+                <div className="grid grid-cols-2 gap-3 text-base">
+                  <div className="bg-indigo-50 p-3 rounded-lg">
+                    <div className="text-xl font-semibold text-indigo-900">{todayEntries.length}</div>
+                    <div className="text-indigo-600 text-sm">Entries</div>
+                  </div>
+                  <div className="bg-cyan-50 p-3 rounded-lg">
+                    <div className="text-xl font-semibold text-cyan-900">{projectsWithTasks.length}</div>
+                    <div className="text-cyan-600 text-sm">Projects</div>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Assigned Projects */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Target className="h-5 w-5" />
-                <span>My Projects</span>
+          {/* Active Timer Section */}
+          <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
+            <CardHeader className="pb-3 flex-shrink-0">
+              <CardTitle className="flex items-center space-x-2 text-indigo-900 text-lg">
+                <Clock className="h-4 w-4" />
+                <span>Active Timer</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {projects.length > 0 ? (
-                  projects.map((project) => (
-                    <div
-                      key={project.id}
-                      className="p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500"
-                    >
-                      <h3 className="font-medium text-gray-900">
-                        {project.name}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {project.description}
-                      </p>
-                      {project.hourly_rate && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          ${project.hourly_rate}/hr
-                        </p>
-                      )}
+            <CardContent className="pt-0 flex-1 flex flex-col justify-center">
+              {activeTimeEntry ? (
+                <div className="text-center">
+                  <div className="text-2xl font-mono font-bold text-indigo-600 mb-2 p-3 bg-indigo-50 rounded-lg">
+                    {formatDuration(timer)}
+                  </div>
+                  <div className="text-xs text-gray-600 mb-2">
+                    Started at {format(new Date(activeTimeEntry.started_at), "HH:mm")}
+                  </div>
+                  <Button
+                    onClick={handleStopTimer}
+                    className="bg-red-600 hover:bg-red-700 text-white shadow-lg px-3 py-1 text-sm"
+                  >
+                    <Square className="h-3 w-3 mr-1" />
+                    Stop Timer
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="text-2xl font-mono font-bold text-gray-400 mb-2 p-3 bg-gray-50 rounded-lg">
+                    00:00:00
+                  </div>
+                  <div className="text-xs text-gray-600 mb-2">No active timer</div>
+                  {projectsWithTasks.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-1 gap-1">
+                        <select
+                          value={selectedProject}
+                          onChange={(e) => {
+                            setSelectedProject(e.target.value);
+                            const project = projectsWithTasks.find(p => p.id === e.target.value);
+                            if (project && project.tasks && project.tasks.length > 0 && project.tasks[0]) {
+                              setSelectedTask(project.tasks[0].id);
+                            }
+                          }}
+                          className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-xs"
+                        >
+                          <option value="">Select Project</option>
+                          {projectsWithTasks.map((project) => (
+                            <option key={project.id} value={project.id}>
+                              {project.name}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={selectedTask}
+                          onChange={(e) => setSelectedTask(e.target.value)}
+                          className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-xs"
+                          disabled={!selectedProject}
+                        >
+                          <option value="">Select Task</option>
+                          {selectedProject && 
+                            projectsWithTasks
+                              .find(p => p.id === selectedProject)?.tasks
+                              ?.map((task) => (
+                                <option key={task.id} value={task.id}>
+                                  {task.name}
+                                </option>
+                              ))
+                          }
+                        </select>
+                      </div>
+                      <Button
+                        onClick={handleStartTimer}
+                        disabled={!selectedProject || !selectedTask}
+                        className="bg-green-600 hover:bg-green-700 text-white shadow-lg w-full px-3 py-1 text-sm"
+                      >
+                        <Play className="h-3 w-3 mr-1" />
+                        Start Timer
+                      </Button>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-center py-4">
-                    No projects assigned
-                  </p>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Assigned Tasks */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5" />
-                <span>My Tasks</span>
+          {/* Today's Time Entries */}
+          <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col flex-1">
+            <CardHeader className="pb-3 flex-shrink-0">
+              <CardTitle className="flex items-center space-x-2 text-indigo-900 text-lg">
+                <Calendar className="h-4 w-4" />
+                <span>Today's Time Entries</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {tasks.length > 0 ? (
-                  tasks.map((task) => (
+            <CardContent className="pt-0 flex-1 flex flex-col min-h-0">
+              {todayEntries.length > 0 ? (
+                <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                  {todayEntries.map((entry) => (
                     <div
-                      key={task.id}
-                      className="p-3 bg-gray-50 rounded-lg border-l-4 border-green-500"
+                      key={entry.id}
+                      className="flex justify-between items-center p-2 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100 hover:shadow-md transition-shadow"
                     >
-                      <h3 className="font-medium text-gray-900">{task.name}</h3>
-                      {task.is_default && (
-                        <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mt-1">
-                          Default
-                        </span>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 text-xs">
+                          {entry.project?.name} - {entry.task?.name}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {format(new Date(entry.started_at), "HH:mm")} -
+                          {entry.ended_at
+                            ? format(new Date(entry.ended_at), " HH:mm")
+                            : " Active"}
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p className="font-mono font-semibold text-indigo-600 text-xs">
+                          {entry.duration ? formatDuration(entry.duration) : "00:00:00"}
+                        </p>
+                        {!entry.ended_at && (
+                          <span className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <Calendar className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-xs">No time entries for today</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Second Row: My Projects & Tasks */}
+        <div className="h-96">
+          <Card className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg h-full flex flex-col">
+            <CardHeader className="pb-4 flex-shrink-0">
+              <CardTitle className="flex items-center space-x-2 text-indigo-900 text-xl">
+                <FolderOpen className="h-5 w-5" />
+                <span>My Projects & Tasks</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                {projectsWithTasks.length > 0 ? (
+                  projectsWithTasks.map((project) => (
+                    <div key={project.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                      {/* Project Header */}
+                      <div
+                        className="p-4 bg-gradient-to-r from-indigo-50 to-cyan-50 cursor-pointer hover:from-indigo-100 hover:to-cyan-100 transition-colors"
+                        onClick={() => toggleProjectExpansion(project.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                              {expandedProjects.has(project.id) ? (
+                                <ChevronDown className="h-5 w-5 text-indigo-600" />
+                              ) : (
+                                <ChevronRight className="h-5 w-5 text-indigo-600" />
+                              )}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-indigo-900">{project.name}</h3>
+                              <p className="text-sm text-gray-600">{project.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
+                              {project.tasks.length} task{project.tasks.length !== 1 ? 's' : ''}
+                            </span>
+                            {project.hourly_rate && (
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                ${project.hourly_rate}/hr
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tasks List */}
+                      {expandedProjects.has(project.id) && (
+                        <div className="bg-white border-t border-gray-100">
+                          {project.tasks.length > 0 ? (
+                            <div className="divide-y divide-gray-100">
+                              {project.tasks.map((task) => (
+                                <div
+                                  key={task.id}
+                                  className={`p-3 cursor-pointer transition-colors ${
+                                    selectedProject === project.id && selectedTask === task.id
+                                      ? 'bg-indigo-50 border-l-4 border-indigo-500'
+                                      : 'hover:bg-gray-50'
+                                  }`}
+                                  onClick={() => handleProjectTaskSelection(project.id, task.id)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                      <FileText className="h-4 w-4 text-gray-400" />
+                                      <span className="font-medium text-gray-900">{task.name}</span>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                      {task.is_default && (
+                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                          Default
+                                        </span>
+                                      )}
+                                      {selectedProject === project.id && selectedTask === task.id && (
+                                        <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
+                                          Selected
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="p-4 text-center text-gray-500">
+                              No tasks available for this project
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500 text-center py-4">
-                    No tasks assigned
-                  </p>
+                  <div className="text-center py-8">
+                    <FolderOpen className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No projects assigned</p>
+                  </div>
                 )}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Today's Time Entries */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Today's Time Entries</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {todayEntries.length > 0 ? (
-              <div className="space-y-3">
-                {todayEntries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">
-                        {entry.project?.name} - {entry.task?.name}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {format(new Date(entry.started_at), "HH:mm")} -
-                        {entry.ended_at
-                          ? format(new Date(entry.ended_at), " HH:mm")
-                          : " Active"}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">
-                        {entry.duration
-                          ? formatDuration(entry.duration)
-                          : "00:00:00"}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-4">
-                No time entries for today
-              </p>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
