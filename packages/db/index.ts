@@ -1,15 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Debug logging for environment variables
 const appName = process.env.NEXT_PUBLIC_APP_NAME || 'unknown';
 console.log(`[${appName}] Supabase configuration:`, {
   hasUrl: !!supabaseUrl,
   hasKey: !!supabaseAnonKey,
-  urlLength: supabaseUrl.length,
-  keyLength: supabaseAnonKey.length,
+  urlLength: supabaseUrl?.length || 0,
+  keyLength: supabaseAnonKey?.length || 0,
 });
 
 export const supabase =
