@@ -17,6 +17,21 @@ import { database } from "@time-tracker/api";
 import { Employee } from "@time-tracker/db";
 import Link from "next/link";
 import { useAuth } from "../../hooks/useAuth";
+import {
+  Users,
+  UserPlus,
+  Mail,
+  Edit3,
+  Trash2,
+  Send,
+  ArrowLeft,
+  LogOut,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  UserCheck,
+} from "lucide-react";
 
 export default function EmployeesPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -188,8 +203,11 @@ export default function EmployeesPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading employees...</p>
+        </div>
       </div>
     );
   }
@@ -198,25 +216,103 @@ export default function EmployeesPage() {
     return null;
   }
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'pending':
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+      default:
+        return <XCircle className="h-4 w-4 text-red-600" />;
+    }
+  };
+
+  const activeEmployees = employees.filter(emp => emp.status === 'active').length;
+  const pendingEmployees = employees.filter(emp => emp.status === 'pending').length;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                  Employee Management
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Manage your team • {employees.length} total employees
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/dashboard">
+                <Button variant="outline" className="hover:bg-blue-50 hover:border-blue-200">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={logout} className="hover:bg-red-50 hover:border-red-200">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+              <Button onClick={() => setShowAddForm(true)} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Employee
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Employee Management</h1>
-            <p className="text-muted-foreground">
-              Manage your team members and their access
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/dashboard">
-              <Button variant="outline">← Back to Dashboard</Button>
-            </Link>
-            <Button variant="outline" onClick={logout}>
-              Logout
-            </Button>
-            <Button onClick={() => setShowAddForm(true)}>Add Employee</Button>
-          </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Employees</p>
+                  <div className="text-3xl font-bold text-gray-900">{employees.length}</div>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Active</p>
+                  <div className="text-3xl font-bold text-green-600">{activeEmployees}</div>
+                </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <UserCheck className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Pending</p>
+                  <div className="text-3xl font-bold text-yellow-600">{pendingEmployees}</div>
+                </div>
+                <div className="p-3 bg-yellow-100 rounded-full">
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {showAddForm && (
@@ -324,50 +420,80 @@ export default function EmployeesPage() {
           </Card>
         )}
 
-        <Card>
+        <Card className="border-0 bg-white/70 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Employees ({employees.length})</CardTitle>
+            <CardTitle className="flex items-center">
+              <Users className="h-5 w-5 mr-2 text-blue-600" />
+              Employee Directory ({employees.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {employees.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  No employees found. Add your first employee to get started.
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-gray-600 text-lg font-medium mb-2">No employees yet</p>
+                <p className="text-gray-500 mb-4">
+                  Add your first team member to get started with time tracking
                 </p>
+                <Button onClick={() => setShowAddForm(true)} className="bg-gradient-to-r from-blue-600 to-purple-600">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add First Employee
+                </Button>
               </div>
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Actions</TableHead>
+                  <TableRow className="border-gray-200">
+                    <TableHead className="font-semibold text-gray-700">Name</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Email</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Created</TableHead>
+                    <TableHead className="font-semibold text-gray-700">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {employees.map((employee) => (
-                    <TableRow key={employee.id}>
-                      <TableCell className="font-medium">
-                        {employee.name}
+                    <TableRow key={employee.id} className="hover:bg-gray-50/50 transition-colors">
+                      <TableCell className="font-medium text-gray-900">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-white text-sm font-medium">
+                              {employee.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          {employee.name}
+                        </div>
                       </TableCell>
-                      <TableCell>{employee.email}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            employee.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : employee.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {employee.status}
-                        </span>
+                      <TableCell className="text-gray-600">
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                          {employee.email}
+                        </div>
                       </TableCell>
                       <TableCell>
-                        {new Date(employee.created_at).toLocaleDateString()}
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(employee.status)}
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              employee.status === "active"
+                                ? "bg-green-100 text-green-800"
+                                : employee.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {employee.status.charAt(0).toUpperCase() + employee.status.slice(1)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        {new Date(employee.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -378,7 +504,9 @@ export default function EmployeesPage() {
                               setEditingEmployee(employee);
                               setShowAddForm(false);
                             }}
+                            className="hover:bg-blue-50 hover:border-blue-200"
                           >
+                            <Edit3 className="h-4 w-4 mr-1" />
                             Edit
                           </Button>
                           {employee.status === "pending" && (
@@ -390,17 +518,28 @@ export default function EmployeesPage() {
                                 handleResendInvitation(e, employee)
                               }
                               disabled={resendingEmail === employee.id}
+                              className="hover:bg-green-50"
                             >
-                              {resendingEmail === employee.id
-                                ? "Sending..."
-                                : "Resend"}
+                              {resendingEmail === employee.id ? (
+                                <div className="flex items-center">
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-600 mr-1"></div>
+                                  Sending...
+                                </div>
+                              ) : (
+                                <>
+                                  <Send className="h-4 w-4 mr-1" />
+                                  Resend
+                                </>
+                              )}
                             </Button>
                           )}
                           <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDeleteEmployee(employee.id)}
+                            className="hover:bg-red-100"
                           >
+                            <Trash2 className="h-4 w-4 mr-1" />
                             Delete
                           </Button>
                         </div>

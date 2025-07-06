@@ -17,6 +17,26 @@ import {
 import { database } from "@time-tracker/api";
 import { Project } from "@time-tracker/db";
 import Link from "next/link";
+import {
+  FolderOpen,
+  Plus,
+  Edit3,
+  Trash2,
+  Users,
+  ArrowLeft,
+  LogOut,
+  DollarSign,
+  Target,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Activity,
+  FileText,
+  User,
+  PlayCircle,
+  PauseCircle,
+  CheckCircle2,
+} from "lucide-react";
 
 export default function ProjectsPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -183,8 +203,11 @@ export default function ProjectsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading projects...</p>
+        </div>
       </div>
     );
   }
@@ -193,25 +216,103 @@ export default function ProjectsPage() {
     return null;
   }
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <PlayCircle className="h-4 w-4 text-green-600" />;
+      case 'completed':
+        return <CheckCircle2 className="h-4 w-4 text-blue-600" />;
+      default:
+        return <PauseCircle className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const activeProjects = projects.filter(proj => proj.status === 'active').length;
+  const completedProjects = projects.filter(proj => proj.status === 'completed').length;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+                <FolderOpen className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                  Project Management
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Create and manage projects • {projects.length} total projects
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/dashboard">
+                <Button variant="outline" className="hover:bg-blue-50 hover:border-blue-200">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={logout} className="hover:bg-red-50 hover:border-red-200">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+              <Button onClick={() => setShowAddForm(true)} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Project
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Project Management</h1>
-            <p className="text-muted-foreground">
-              Create and manage your projects
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/dashboard">
-              <Button variant="outline">← Back to Dashboard</Button>
-            </Link>
-            <Button variant="outline" onClick={logout}>
-              Logout
-            </Button>
-            <Button onClick={() => setShowAddForm(true)}>Add Project</Button>
-          </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Projects</p>
+                  <div className="text-3xl font-bold text-gray-900">{projects.length}</div>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <FolderOpen className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Active</p>
+                  <div className="text-3xl font-bold text-green-600">{activeProjects}</div>
+                </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <PlayCircle className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
+                  <div className="text-3xl font-bold text-blue-600">{completedProjects}</div>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <CheckCircle2 className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {showAddForm && (

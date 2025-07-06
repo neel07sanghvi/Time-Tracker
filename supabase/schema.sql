@@ -2,8 +2,8 @@
 CREATE TABLE IF NOT EXISTS employees (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
-  password TEXT,
   name VARCHAR(255) NOT NULL,
+  password TEXT,
   status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'inactive')),
   activation_token TEXT UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
@@ -101,6 +101,13 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Drop existing triggers to avoid conflicts
+DROP TRIGGER IF EXISTS update_employees_updated_at ON employees;
+DROP TRIGGER IF EXISTS update_projects_updated_at ON projects;
+DROP TRIGGER IF EXISTS update_tasks_updated_at ON tasks;
+DROP TRIGGER IF EXISTS update_time_entries_updated_at ON time_entries;
+DROP TRIGGER IF EXISTS update_admins_updated_at ON admins;
+
 -- Create triggers for updated_at
 CREATE TRIGGER update_employees_updated_at BEFORE UPDATE ON employees FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -108,7 +115,19 @@ CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks FOR EACH ROW EXECU
 CREATE TRIGGER update_time_entries_updated_at BEFORE UPDATE ON time_entries FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_admins_updated_at BEFORE UPDATE ON admins FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Enable Row Level Security
+-- Create storage bucket for screenshots if it doesn't exist
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('screenshots', 'screenshots', false)
+ON CONFLICT (id) DO NOTHING;
+
+-- Create storage policy for screenshots (simple open access)
+DROP POLICY IF EXISTS "Authenticated users can upload screenshots" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can view screenshots" ON storage.objects;
+DROP POLICY IF EXISTS "Allow all access to screenshots" ON storage.objects;
+
+CREATE POLICY "Allow all access to screenshots" ON storage.objects FOR ALL USING (bucket_id = 'screenshots');
+
+-- Enable Row Level Security (RLS) on all tables
 ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
@@ -119,41 +138,61 @@ ALTER TABLE screenshots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE devices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies for admins (full access)
-CREATE POLICY "Admins can view all employees" ON employees FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can insert employees" ON employees FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Admins can update employees" ON employees FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can delete employees" ON employees FOR DELETE USING (auth.role() = 'authenticated');
+-- Drop existing policies to avoid conflicts
+DROP POLICY IF EXISTS "Public read access to employees" ON employees;
+DROP POLICY IF EXISTS "Public write access to employees" ON employees;
+DROP POLICY IF EXISTS "Public read access to projects" ON projects;
+DROP POLICY IF EXISTS "Public write access to projects" ON projects;
+DROP POLICY IF EXISTS "Public read access to tasks" ON tasks;
+DROP POLICY IF EXISTS "Public write access to tasks" ON tasks;
+DROP POLICY IF EXISTS "Public read access to project_assignments" ON project_assignments;
+DROP POLICY IF EXISTS "Public write access to project_assignments" ON project_assignments;
+DROP POLICY IF EXISTS "Public read access to task_assignments" ON task_assignments;
+DROP POLICY IF EXISTS "Public write access to task_assignments" ON task_assignments;
+DROP POLICY IF EXISTS "Public read access to time_entries" ON time_entries;
+DROP POLICY IF EXISTS "Public write access to time_entries" ON time_entries;
+DROP POLICY IF EXISTS "Public read access to screenshots" ON screenshots;
+DROP POLICY IF EXISTS "Public write access to screenshots" ON screenshots;
+DROP POLICY IF EXISTS "Public read access to devices" ON devices;
+DROP POLICY IF EXISTS "Public write access to devices" ON devices;
+DROP POLICY IF EXISTS "Public read access to admins" ON admins;
+DROP POLICY IF EXISTS "Public write access to admins" ON admins;
 
-CREATE POLICY "Admins can view all projects" ON projects FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can insert projects" ON projects FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Admins can update projects" ON projects FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can delete projects" ON projects FOR DELETE USING (auth.role() = 'authenticated');
+-- Create permissive policies for development (allows both authenticated users and anon access)
+-- In production, these should be more restrictive
 
-CREATE POLICY "Admins can view all tasks" ON tasks FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can insert tasks" ON tasks FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Admins can update tasks" ON tasks FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can delete tasks" ON tasks FOR DELETE USING (auth.role() = 'authenticated');
+-- Employees table policies
+CREATE POLICY "Public read access to employees" ON employees FOR SELECT USING (true);
+CREATE POLICY "Public write access to employees" ON employees FOR ALL USING (true);
 
-CREATE POLICY "Admins can view all assignments" ON project_assignments FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can insert assignments" ON project_assignments FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Admins can update assignments" ON project_assignments FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can delete assignments" ON project_assignments FOR DELETE USING (auth.role() = 'authenticated');
+-- Projects table policies
+CREATE POLICY "Public read access to projects" ON projects FOR SELECT USING (true);
+CREATE POLICY "Public write access to projects" ON projects FOR ALL USING (true);
 
-CREATE POLICY "Admins can view all task assignments" ON task_assignments FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can insert task assignments" ON task_assignments FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Admins can update task assignments" ON task_assignments FOR UPDATE USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can delete task assignments" ON task_assignments FOR DELETE USING (auth.role() = 'authenticated');
+-- Tasks table policies
+CREATE POLICY "Public read access to tasks" ON tasks FOR SELECT USING (true);
+CREATE POLICY "Public write access to tasks" ON tasks FOR ALL USING (true);
 
-CREATE POLICY "Admins can view all time entries" ON time_entries FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can view all screenshots" ON screenshots FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Admins can view all devices" ON devices FOR SELECT USING (auth.role() = 'authenticated');
+-- Project assignments table policies
+CREATE POLICY "Public read access to project_assignments" ON project_assignments FOR SELECT USING (true);
+CREATE POLICY "Public write access to project_assignments" ON project_assignments FOR ALL USING (true);
 
-CREATE POLICY "Admins can view all admins" ON admins FOR SELECT USING (auth.role() = 'authenticated');
+-- Task assignments table policies
+CREATE POLICY "Public read access to task_assignments" ON task_assignments FOR SELECT USING (true);
+CREATE POLICY "Public write access to task_assignments" ON task_assignments FOR ALL USING (true);
 
--- Create storage bucket for screenshots
-INSERT INTO storage.buckets (id, name, public) VALUES ('screenshots', 'screenshots', false);
+-- Time entries table policies
+CREATE POLICY "Public read access to time_entries" ON time_entries FOR SELECT USING (true);
+CREATE POLICY "Public write access to time_entries" ON time_entries FOR ALL USING (true);
 
--- Create storage policy for screenshots
-CREATE POLICY "Authenticated users can upload screenshots" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'screenshots' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can view screenshots" ON storage.objects FOR SELECT USING (bucket_id = 'screenshots' AND auth.role() = 'authenticated');
+-- Screenshots table policies
+CREATE POLICY "Public read access to screenshots" ON screenshots FOR SELECT USING (true);
+CREATE POLICY "Public write access to screenshots" ON screenshots FOR ALL USING (true);
+
+-- Devices table policies
+CREATE POLICY "Public read access to devices" ON devices FOR SELECT USING (true);
+CREATE POLICY "Public write access to devices" ON devices FOR ALL USING (true);
+
+-- Admins table policies
+CREATE POLICY "Public read access to admins" ON admins FOR SELECT USING (true);
+CREATE POLICY "Public write access to admins" ON admins FOR ALL USING (true);

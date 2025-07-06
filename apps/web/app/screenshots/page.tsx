@@ -17,6 +17,22 @@ import {
 import { database } from "@time-tracker/api";
 import { Screenshot } from "@time-tracker/db";
 import Link from "next/link";
+import {
+  Camera,
+  ArrowLeft,
+  LogOut,
+  Filter,
+  Eye,
+  Calendar,
+  Users,
+  Activity,
+  BarChart3,
+  Clock,
+  CheckCircle,
+  Image,
+  Monitor,
+  User,
+} from "lucide-react";
 
 export default function ScreenshotsPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -80,8 +96,11 @@ export default function ScreenshotsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading screenshots...</p>
+        </div>
       </div>
     );
   }
@@ -90,24 +109,89 @@ export default function ScreenshotsPage() {
     return null;
   }
 
+  const totalScreenshots = screenshots.length;
+  const screenshotsWithTimeEntry = screenshots.filter((s) => s.time_entry_id).length;
+  const screenshotsWithPermission = screenshots.filter((s) => s.has_permission).length;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+                <Camera className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                  Screenshot Monitoring
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Monitor productivity • {totalScreenshots} screenshots captured
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/dashboard">
+                <Button variant="outline" className="hover:bg-blue-50 hover:border-blue-200">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={logout} className="hover:bg-red-50 hover:border-red-200">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Screenshot Monitoring</h1>
-            <p className="text-muted-foreground">
-              Monitor employee productivity and activity
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/dashboard">
-              <Button variant="outline">← Back to Dashboard</Button>
-            </Link>
-            <Button variant="outline" onClick={logout}>
-              Logout
-            </Button>
-          </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Screenshots</p>
+                  <div className="text-3xl font-bold text-gray-900">{totalScreenshots}</div>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Camera className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">With Time Entry</p>
+                  <div className="text-3xl font-bold text-green-600">{screenshotsWithTimeEntry}</div>
+                </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <Activity className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">With Permission</p>
+                  <div className="text-3xl font-bold text-purple-600">{screenshotsWithPermission}</div>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <CheckCircle className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Card className="mb-6">

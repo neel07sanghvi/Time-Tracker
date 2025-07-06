@@ -18,6 +18,23 @@ import { database } from "@time-tracker/api";
 import { Employee, Task, Project, TaskAssignment } from "@time-tracker/db";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import {
+  CheckSquare,
+  Plus,
+  Edit3,
+  Trash2,
+  UserPlus,
+  ArrowLeft,
+  LogOut,
+  Target,
+  Users,
+  CheckCircle,
+  AlertCircle,
+  User,
+  FileText,
+  Star,
+  Clock,
+} from "lucide-react";
 
 export default function TasksPage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -163,8 +180,11 @@ export default function TasksPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading tasks...</p>
+        </div>
       </div>
     );
   }
@@ -173,27 +193,92 @@ export default function TasksPage() {
     return null;
   }
 
+  const defaultTasks = tasks.filter(task => task.is_default).length;
+  const assignedTasks = Object.keys(taskAssignments).length;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+                <CheckSquare className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                  Task Management
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {project ? `${project.name} • ${tasks.length} tasks` : `${tasks.length} tasks`}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/projects">
+                <Button variant="outline" className="hover:bg-blue-50 hover:border-blue-200">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Projects
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={logout} className="hover:bg-red-50 hover:border-red-200">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+              <Button onClick={() => setShowAddForm(true)} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Task
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Task Management</h1>
-            <p className="text-muted-foreground">
-              {project
-                ? `Manage tasks for ${project.name}`
-                : "Manage project tasks"}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/projects">
-              <Button variant="outline">← Back to Projects</Button>
-            </Link>
-            <Button variant="outline" onClick={logout}>
-              Logout
-            </Button>
-            <Button onClick={() => setShowAddForm(true)}>Add Task</Button>
-          </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Tasks</p>
+                  <div className="text-3xl font-bold text-gray-900">{tasks.length}</div>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <CheckSquare className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Default Tasks</p>
+                  <div className="text-3xl font-bold text-yellow-600">{defaultTasks}</div>
+                </div>
+                <div className="p-3 bg-yellow-100 rounded-full">
+                  <Star className="h-6 w-6 text-yellow-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Assigned</p>
+                  <div className="text-3xl font-bold text-green-600">{assignedTasks}</div>
+                </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <Users className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {showAddForm && (

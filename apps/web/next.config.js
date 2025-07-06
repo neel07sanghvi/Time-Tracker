@@ -10,6 +10,9 @@ const nextConfig = {
       },
     },
   },
+  env: {
+    NEXT_PUBLIC_APP_NAME: 'web',
+  },
 };
 
 module.exports = nextConfig;

@@ -8,7 +8,6 @@ import { Input } from "@time-tracker/ui";
 import { Label } from "@time-tracker/ui";
 import { database } from "@time-tracker/api";
 import { Employee } from "@time-tracker/db";
-import { HmacSHA1 } from "crypto-js";
 
 export function ActivateForm() {
   const [loading, setLoading] = useState(false);
@@ -35,7 +34,8 @@ export function ActivateForm() {
 
   const verifyToken = async () => {
     try {
-      const { data, error } = await database.getEmployeeByActivationToken(token);
+      const { data, error } =
+        await database.getEmployeeByActivationToken(token);
 
       if (error || !data || data.length === 0) {
         setError("Invalid or expired activation token");
@@ -89,7 +89,7 @@ export function ActivateForm() {
         return;
       }
       // Update employee status and clear activation token
-      const { error } = await database.activateEmployee(employee.id, HmacSHA1(password, 'salt').toString());
+      const { error } = await database.activateEmployee(employee.id, password);
 
       if (error) {
         setError("Failed to activate account. Please try again.");
