@@ -24,6 +24,10 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
+// Check if we're in Electron environment
+const isElectron = typeof window !== 'undefined' && window.require;
+const ipcRenderer = isElectron ? window.require('electron').ipcRenderer : null;
+
 interface ProjectWithTasks extends Project {
   tasks: Task[];
 }
@@ -161,6 +165,14 @@ export default function DashboardPage() {
         setActiveTimeEntry(data);
         setTimer(0);
         await loadDashboardData(); // Refresh today's entries
+        
+        // Start screenshots in Electron
+        if (ipcRenderer) {
+          console.log('🎬 Sending start-screenshots message to Electron for employee:', employee.id);
+          ipcRenderer.send('start-screenshots', employee.id);
+        } else {
+          console.log('⚠️ Not running in Electron environment');
+        }
       } else {
         console.error("Error starting timer:", error);
       }
@@ -178,6 +190,14 @@ export default function DashboardPage() {
         setActiveTimeEntry(null);
         setTimer(0);
         await loadDashboardData(); // Refresh today's entries
+        
+        // Stop screenshots in Electron
+        if (ipcRenderer) {
+          console.log('🛑 Sending stop-screenshots message to Electron');
+          ipcRenderer.send('stop-screenshots');
+        } else {
+          console.log('⚠️ Not running in Electron environment');
+        }
       } else {
         console.error("Error stopping timer:", error);
       }
