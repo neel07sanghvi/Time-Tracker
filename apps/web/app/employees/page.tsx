@@ -116,7 +116,7 @@ export default function EmployeesPage() {
         );
       }
 
-      setEmployees([...employees, data[0]]);
+      setEmployees([data[0], ...employees]);
       setNewEmployee({ name: "", email: "" });
       setShowAddForm(false);
     }

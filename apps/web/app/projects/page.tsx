@@ -110,7 +110,7 @@ export default function ProjectsPage() {
     const { data, error } = await database.createProject(newProject);
 
     if (data) {
-      setProjects([...projects, data[0]]);
+      setProjects([data[0], ...projects]);
       setNewProject({ name: "", description: "", hourly_rate: 0 });
       setShowAddForm(false);
     }

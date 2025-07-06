@@ -125,7 +125,7 @@ export default function TasksPage() {
     });
 
     if (data) {
-      setTasks([...tasks, data[0]]);
+      setTasks([data[0], ...tasks]);
       setNewTask({
         name: "",
         project_id: projectId,
